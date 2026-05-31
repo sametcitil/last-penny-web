@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-<<<<<<< HEAD
-html,
-body {
-  background: #0d0d0d;
-  color: #f5f1e8;
-  font-family: var(--font-inter);
-=======
 /* ── Design Tokens ─────────────────────────────────────────────── */
 :root {
   --color-bg: #0d0d0d;
@@ -300,5 +293,4 @@ input:focus, textarea:focus, select:focus {
 .badge-cancelled {
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
->>>>>>> master
 }

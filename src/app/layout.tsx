@@ -1,9 +1,4 @@
 import "./globals.css";
-<<<<<<< HEAD
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import { Inter, Playfair_Display } from "next/font/google";
-=======
 import { Inter, Playfair_Display } from "next/font/google";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -30,7 +25,6 @@ export const metadata = {
     type: "website",
   },
 };
->>>>>>> master
 
 export default function RootLayout({
   children,
@@ -38,13 +32,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-<<<<<<< HEAD
-    <html lang="en">
-      <body>
-        <Navbar />
-        {children}
-        <Footer />
-=======
     <html lang="tr" className={`${inter.variable} ${playfair.variable}`}>
       <body className="noise">
         <AuthProvider>
@@ -56,17 +43,7 @@ export default function RootLayout({
             <CartDrawer />
           </CartProvider>
         </AuthProvider>
->>>>>>> master
       </body>
     </html>
   );
 }
-
-<<<<<<< HEAD
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-});
-=======
->>>>>>> master

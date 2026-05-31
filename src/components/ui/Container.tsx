@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-export default function Container({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <div className="max-w-6xl mx-auto px-4">{children}</div>;
-=======
 import { twMerge } from "tailwind-merge";
 
 interface ContainerProps {
@@ -19,5 +11,4 @@ export default function Container({ children, className }: ContainerProps) {
       {children}
     </div>
   );
->>>>>>> master
 }

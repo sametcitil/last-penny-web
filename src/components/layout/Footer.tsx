@@ -1,14 +1,4 @@
 import Container from "@/components/ui/Container";
-<<<<<<< HEAD
-
-export default function Footer() {
-  return (
-    <footer className="border-t border-white/10 mt-20">
-      <Container>
-        <div className="py-10 text-sm text-white/60 flex justify-between">
-          <p>© 2026 Last Penny</p>
-          <p>Jazz • Culture • Community</p>
-=======
 import { MapPin, Phone, Clock, Music } from "lucide-react";
 import Link from "next/link";
 
@@ -119,7 +109,6 @@ export default function Footer() {
             Made with{" "}
             <span className="text-[var(--color-primary)]">♥</span> in Ankara
           </p>
->>>>>>> master
         </div>
       </Container>
     </footer>
