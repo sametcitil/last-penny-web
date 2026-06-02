@@ -8,28 +8,13 @@ interface GalleryItemType {
   _id: string;
   title: string;
   category: "lezzet" | "mekan";
-  description: string;
-  gradient: string;
-  iconName: string;
-  quote?: string;
-  quoteAuthor?: string;
+  image: string;
 }
 
 const CATEGORIES = [
   { id: "all", label: "Tüm Kategoriler" },
   { id: "lezzet", label: "Last Penny Lezzetleri" },
   { id: "mekan", label: "Last Penny'den" },
-];
-
-const ICONS = ["Coffee", "Music", "Sparkles", "Heart", "Camera"];
-
-const GRADIENTS = [
-  { value: "from-amber-950/80 via-slate-900 to-amber-900/80", label: "Ahşap & Nostalji (Kahve)" },
-  { value: "from-indigo-950/80 via-slate-900 to-purple-900/80", label: "Gece & Caz (Lacivert)" },
-  { value: "from-red-950/80 via-slate-900 to-rose-900/80", label: "Kırmızı Kokteyl (Kırmızı)" },
-  { value: "from-teal-950/80 via-slate-900 to-emerald-900/80", label: "Kültür & Kitap (Yeşil)" },
-  { value: "from-yellow-950/80 via-slate-900 to-amber-950/80", label: "Altın Analog (Sarı)" },
-  { value: "from-fuchsia-950/80 via-slate-900 to-violet-900/80", label: "Eğlence & Dostlar (Mor)" },
 ];
 
 export default function AdminGalleryPage() {
@@ -44,11 +29,7 @@ export default function AdminGalleryPage() {
   // Form states
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<GalleryItemType["category"]>("lezzet");
-  const [description, setDescription] = useState("");
-  const [gradient, setGradient] = useState(GRADIENTS[0].value);
-  const [iconName, setIconName] = useState("Coffee");
-  const [quote, setQuote] = useState("");
-  const [quoteAuthor, setQuoteAuthor] = useState("");
+  const [image, setImage] = useState("");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -78,11 +59,7 @@ export default function AdminGalleryPage() {
     setEditingItem(null);
     setTitle("");
     setCategory("lezzet");
-    setDescription("");
-    setGradient(GRADIENTS[0].value);
-    setIconName("Coffee");
-    setQuote("");
-    setQuoteAuthor("");
+    setImage("");
     setFormError("");
     setModalOpen(true);
   };
@@ -91,19 +68,31 @@ export default function AdminGalleryPage() {
     setEditingItem(item);
     setTitle(item.title);
     setCategory(item.category);
-    setDescription(item.description);
-    setGradient(item.gradient);
-    setIconName(item.iconName || "Coffee");
-    setQuote(item.quote || "");
-    setQuoteAuthor(item.quoteAuthor || "");
+    setImage(item.image);
     setFormError("");
     setModalOpen(true);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError("Görsel boyutu 5MB'dan küçük olmalıdır.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) {
-      setFormError("Lütfen başlık ve açıklama alanlarını doldurunuz.");
+    if (!title || !image) {
+      setFormError("Lütfen başlık ve görsel alanlarını doldurunuz.");
       return;
     }
 
@@ -114,11 +103,7 @@ export default function AdminGalleryPage() {
       const body = {
         title,
         category,
-        description,
-        gradient,
-        iconName,
-        quote,
-        quoteAuthor,
+        image,
       };
 
       const url = editingItem ? `/api/gallery/${editingItem._id}` : "/api/gallery";
@@ -234,36 +219,30 @@ export default function AdminGalleryPage() {
               key={item._id}
               className="bg-white border border-[var(--color-border)] rounded-2xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group"
             >
-              {/* Visual preview box using the gradient */}
-              <div className={`h-40 w-full bg-gradient-to-br ${item.gradient} rounded-xl mb-4 relative flex items-center justify-center p-4 border border-[var(--color-border)] overflow-hidden`}>
-                <div className="absolute inset-0 bg-black/10" />
-                <div className="z-10 text-center">
-                  <span className="text-[9px] tracking-[0.2em] font-mono text-amber-200 block uppercase font-bold mb-1">
-                    {item.category === "lezzet" ? "Lezzet" : "Mekan"}
-                  </span>
-                  <h4 className="font-bold text-white text-sm line-clamp-1 font-[family-name:var(--font-playfair)]">
-                    {item.title}
-                  </h4>
+              {/* Visual preview box using the image */}
+              <div className="h-48 w-full rounded-xl mb-4 relative overflow-hidden border border-[var(--color-border)] bg-stone-100 flex items-center justify-center">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-full text-[9px] tracking-wider font-mono text-white uppercase font-bold">
+                  {item.category === "lezzet" ? "Lezzet" : "Mekan"}
                 </div>
               </div>
 
               {/* Text info */}
-              <div className="space-y-2 flex-1 flex flex-col justify-between">
+              <div className="space-y-4 flex-1 flex flex-col justify-between">
                 <div>
-                  <p className="text-xs text-[var(--color-secondary)]/85 line-clamp-2 leading-relaxed">
-                    {item.description}
+                  <h4 className="font-bold text-[var(--color-secondary)] text-sm line-clamp-1 font-[family-name:var(--font-playfair)] mb-1">
+                    {item.title}
+                  </h4>
+                  <p className="text-[10px] text-[var(--color-muted)] font-medium">
+                    Kategori: {item.category === "lezzet" ? "Last Penny Lezzetleri" : "Last Penny'den"}
                   </p>
-                  {item.quote && (
-                    <p className="text-[10px] italic text-[var(--color-muted)] border-l-2 border-[var(--color-primary)]/30 pl-2 mt-2">
-                      &ldquo;{item.quote}&rdquo; — {item.quoteAuthor || "Anonim"}
-                    </p>
-                  )}
                 </div>
 
-                <div className="pt-4 border-t border-[var(--color-border)] flex items-center justify-between mt-auto">
-                  <span className="text-[10px] font-mono font-bold text-[var(--color-muted)]">
-                    İkon: {item.iconName || "Camera"}
-                  </span>
+                <div className="pt-3 border-t border-[var(--color-border)] flex items-center justify-end mt-auto">
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => openEditModal(item)}
@@ -316,7 +295,7 @@ export default function AdminGalleryPage() {
                 <h3 className="font-bold text-lg font-[family-name:var(--font-playfair)]">
                   {editingItem ? "Galeri Öğesini Düzenle" : "Yeni Galeri Öğesi Ekle"}
                 </h3>
-                <p className="text-xs text-[var(--color-muted)]">Atmosfer ve detay bilgilerini doldurun.</p>
+                <p className="text-xs text-[var(--color-muted)]">Görsel detaylarını doldurun.</p>
               </div>
 
               {formError && (
@@ -328,99 +307,73 @@ export default function AdminGalleryPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Title */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Görsel Başlığı</label>
+                  <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Görsel İsmi / Başlık</label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Örn: Akustik Köşe"
+                    placeholder="Örn: Kadayıflı Karides"
                     className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white"
                     required
                   />
                 </div>
 
-                {/* Category & Icon & Gradient */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Kategori</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value as GalleryItemType["category"])}
-                      className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white focus:outline-none"
-                    >
-                      <option value="lezzet">Last Penny Lezzetleri (Yemek, Kokteyl vb.)</option>
-                      <option value="mekan">Last Penny'den (Mekan Fotoğrafları)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">İkon</label>
-                    <select
-                      value={iconName}
-                      onChange={(e) => setIconName(e.target.value)}
-                      className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white focus:outline-none"
-                    >
-                      {ICONS.map((ico) => (
-                        <option key={ico} value={ico}>
-                          {ico}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
+                {/* Category */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Görsel Renk Gradyanı</label>
+                  <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Kategori</label>
                   <select
-                    value={gradient}
-                    onChange={(e) => setGradient(e.target.value)}
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as GalleryItemType["category"])}
                     className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white focus:outline-none"
                   >
-                    {GRADIENTS.map((grad) => (
-                      <option key={grad.value} value={grad.value}>
-                        {grad.label}
-                      </option>
-                    ))}
+                    <option value="lezzet">Last Penny Lezzetleri (Yemek, Kokteyl vb.)</option>
+                    <option value="mekan">Last Penny'den (Mekan Fotoğrafları)</option>
                   </select>
                 </div>
 
-                {/* Description */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Açıklama</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Mekan veya görselin hissini anlatan kısa detay..."
-                    rows={3}
-                    className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white"
-                    required
-                  />
-                </div>
+                {/* Image Upload */}
+                <div className="space-y-2">
+                  <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold block">Görsel</label>
+                  
+                  {/* Image Preview */}
+                  {image && (
+                    <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-[var(--color-border)] bg-stone-100 flex items-center justify-center group mb-2">
+                      <img
+                        src={image}
+                        alt="Önizleme"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setImage("")}
+                        className="absolute top-2 right-2 bg-black/60 hover:bg-black/85 text-white p-1.5 rounded-full transition-all"
+                        title="Görseli Kaldır"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
 
-                {/* Optional Quote */}
-                <div className="border-t border-[var(--color-border)] pt-4 space-y-4">
-                  <span className="text-[10px] tracking-wider uppercase font-bold font-mono text-[var(--color-primary)]">Alıntı Söz Ekle (İsteğe Bağlı)</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Alıntı Söz</label>
+                  <div className="flex items-center justify-center w-full">
+                    <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                      image 
+                        ? "border-[var(--color-border)] bg-stone-50 hover:bg-stone-100" 
+                        : "border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5 hover:bg-[var(--color-primary)]/10"
+                    }`}>
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
+                        <Image size={24} className="text-[var(--color-muted)] mb-2" />
+                        <p className="text-xs text-stone-600 font-medium">
+                          {image ? "Görseli Değiştir" : "Görsel Seçmek İçin Tıklayın"}
+                        </p>
+                        <p className="text-[10px] text-stone-400 mt-1">PNG, JPG, JPEG (Maks. 5MB)</p>
+                      </div>
                       <input
-                        type="text"
-                        value={quote}
-                        onChange={(e) => setQuote(e.target.value)}
-                        placeholder="Örn: Caz, özgürlüğün sesidir."
-                        className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
                       />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Söz Yazarı</label>
-                      <input
-                        type="text"
-                        value={quoteAuthor}
-                        onChange={(e) => setQuoteAuthor(e.target.value)}
-                        placeholder="Örn: Thelonious Monk"
-                        className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white"
-                      />
-                    </div>
+                    </label>
                   </div>
                 </div>
 

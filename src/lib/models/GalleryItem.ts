@@ -3,11 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IGalleryItem extends Document {
   title: string;
   category: "lezzet" | "mekan";
-  description: string;
-  gradient: string;
-  iconName: string; // e.g., 'Coffee', 'Music', 'Sparkles', 'Heart'
-  quote?: string;
-  quoteAuthor?: string;
+  image: string; // Base64 data URL or relative path
   createdAt: Date;
 }
 
@@ -19,11 +15,7 @@ const GalleryItemSchema = new Schema<IGalleryItem>(
       enum: ["lezzet", "mekan"],
       required: true,
     },
-    description: { type: String, required: true },
-    gradient: { type: String, required: true },
-    iconName: { type: String, required: true, default: "Camera" },
-    quote: { type: String, trim: true },
-    quoteAuthor: { type: String, trim: true },
+    image: { type: String, required: true },
   },
   { timestamps: true }
 );

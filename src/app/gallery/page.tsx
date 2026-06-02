@@ -2,28 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Maximize2, X, Music, Sparkles, Coffee, Heart, LucideIcon } from "lucide-react";
+import { Camera, Maximize2, X } from "lucide-react";
 import Container from "@/components/ui/Container";
-
-const iconMap: Record<string, LucideIcon> = {
-  Coffee: Coffee,
-  Music: Music,
-  Sparkles: Sparkles,
-  Heart: Heart,
-  Camera: Camera,
-};
 
 interface GalleryItem {
   id?: string;
   _id?: string;
   title: string;
   category: "lezzet" | "mekan";
-  description: string;
-  gradient: string;
-  icon?: LucideIcon;
-  iconName?: string;
-  quote?: string;
-  quoteAuthor?: string;
+  image: string;
 }
 
 const SECTIONS = [
@@ -41,57 +28,37 @@ const GALLERY_ITEMS: GalleryItem[] = [
     id: "g1",
     title: "Akustik Köşe & Caz Kütüphanesi",
     category: "mekan",
-    description: "Plak dolabı, vintage hoparlörler ve loş ışıklar eşliğinde dinlenme köşesi.",
-    gradient: "from-amber-950/80 via-slate-900 to-amber-900/80",
-    iconName: "Coffee",
-    quote: "Müzik, hislerin kelimelerle ifade edilemeyen kısmıdır.",
-    quoteAuthor: "Leo Tolstoy",
+    image: "/interior.jpg",
   },
   {
     id: "g2",
     title: "Gece Yarısı Caz Seansı",
     category: "mekan",
-    description: "Haftalık canlı caz quartet performansından nefes kesen anlar.",
-    gradient: "from-indigo-950/80 via-slate-900 to-purple-900/80",
-    iconName: "Music",
-    quote: "Caz, özgürlüğün sesidir.",
-    quoteAuthor: "Thelonious Monk",
+    image: "/stage.jpg",
   },
   {
     id: "g3",
     title: "Last Penny İmza Kokteylleri",
     category: "lezzet",
-    description: "Bar ekibimizin taze meyveler ve el yapımı şuruplarla hazırladığı sunumlar.",
-    gradient: "from-red-950/80 via-slate-900 to-rose-900/80",
-    iconName: "Sparkles",
-    quote: "Sanat, lezzetin bardağa dökülmüş halidir.",
+    image: "/bar.jpg",
   },
   {
     id: "g4",
     title: "Kitap Kulübü & Söyleşiler",
     category: "mekan",
-    description: "Her Pazar topluluğumuzla bir araya gelip edebiyat ve felsefe konuştuğumuz anlar.",
-    gradient: "from-teal-950/80 via-slate-900 to-emerald-900/80",
-    iconName: "Coffee",
-    quote: "Paylaşmak, topluluk olmanın ilk adımıdır.",
+    image: "/patio.png",
   },
   {
     id: "g5",
     title: "Pirinç Plak Çalar & Nostalji",
     category: "mekan",
-    description: "Mekanın ruhunu belirleyen 1970'lerden kalma pikap ve analog tınılar.",
-    gradient: "from-yellow-950/80 via-slate-900 to-amber-950/80",
-    iconName: "Music",
-    quote: "Sesin en sıcak hali plaktan yükselendir.",
+    image: "/sign.png",
   },
   {
     id: "g6",
     title: "Dostlarla Hafta Sonu",
     category: "mekan",
-    description: "Cumartesi kahvaltısı ve Pazar kokteylleriyle paylaşılan neşeli anlar.",
-    gradient: "from-fuchsia-950/80 via-slate-900 to-violet-900/80",
-    iconName: "Heart",
-    quote: "En güzel hikayeler, Last Penny masalarında yazılır.",
+    image: "/interior.jpg",
   },
 ];
 
@@ -244,43 +211,29 @@ export default function GalleryPage() {
                     </div>
 
                     {/* Sade Modern Art Gallery Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                       {sectionItems.map((item) => {
-                        const IconComponent = iconMap[item.iconName] || item.icon || Camera;
                         return (
                           <motion.div
                             layout
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
                             key={item._id || item.id}
                             onClick={() => setSelectedItem(item)}
-                            className="flex flex-col gap-3 group cursor-pointer"
+                            className="relative aspect-square rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:scale-[1.01] cursor-pointer transition-all duration-300 group"
                           >
-                            {/* Visual Art Box */}
-                            <div className={`relative h-60 rounded-2xl bg-gradient-to-br ${item.gradient} overflow-hidden shadow-xs group-hover:shadow-md group-hover:scale-[1.01] transition-all duration-300`}>
-                              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/5 transition-colors duration-300" />
-                              
-                              {/* Maximize Icon Overlay */}
-                              <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/70 group-hover:text-white transition-all duration-300">
-                                <Maximize2 size={12} className="group-hover:scale-110" />
+                            <img
+                              src={item.image}
+                              alt="Last Penny Galeri Görseli"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            {/* Subtle overlay on hover */}
+                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white">
+                                <Maximize2 size={16} />
                               </div>
-
-                              {/* Center Icon */}
-                              <div className="absolute inset-0 flex items-center justify-center text-white/20 group-hover:text-white/40 transition-colors duration-300">
-                                <IconComponent size={40} strokeWidth={1} />
-                              </div>
-                            </div>
-
-                            {/* Caption Underneath */}
-                            <div className="space-y-1 px-1">
-                              <h3 className="font-bold text-base text-[var(--color-secondary)]/90 group-hover:text-[var(--color-primary)] transition-colors duration-300 font-[family-name:var(--font-playfair)]">
-                                {item.title}
-                              </h3>
-                              <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                                {item.description}
-                              </p>
                             </div>
                           </motion.div>
                         );
@@ -302,77 +255,21 @@ export default function GalleryPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedItem(null)}
-            className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-10"
+            className="fixed inset-0 z-50 bg-stone-950/90 backdrop-blur-xs flex items-center justify-center p-4 md:p-10"
           >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-3xl rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-2xl flex flex-col md:flex-row h-auto max-h-[90vh] md:h-[450px]"
-            >
-              {/* Left visual representation */}
-              <div className={`md:w-1/2 h-64 md:h-full bg-gradient-to-br ${selectedItem.gradient} relative flex flex-col items-center justify-center p-8 border-b md:border-b-0 md:border-r border-[var(--color-border)] overflow-hidden`}>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent)]" />
-                <div className="absolute -left-20 -top-20 w-64 h-64 bg-white/5 rounded-full filter blur-3xl pointer-events-none" />
-                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-[var(--color-primary)]/10 rounded-full filter blur-3xl pointer-events-none" />
-
-                {selectedItem.quote ? (
-                  <div className="text-center z-10">
-                    <p className="font-[family-name:var(--font-playfair)] italic text-xl md:text-2xl text-white mb-3 leading-relaxed">
-                      &ldquo;{selectedItem.quote}&rdquo;
-                    </p>
-                    {selectedItem.quoteAuthor && (
-                      <span className="text-xs uppercase tracking-widest text-amber-200 font-semibold">
-                        — {selectedItem.quoteAuthor}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center z-10 flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-amber-200">
-                      {(() => {
-                        const Icon = iconMap[selectedItem.iconName] || selectedItem.icon || Camera;
-                        return <Icon size={30} />;
-                      })()}
-                    </div>
-                    <span className="font-[family-name:var(--font-playfair)] tracking-widest text-lg font-semibold text-white">
-                      LAST PENNY
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Right content details */}
-              <div className="md:w-1/2 p-8 flex flex-col justify-between relative bg-white">
-                <button
-                  onClick={() => setSelectedItem(null)}
-                  className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-800 p-1.5 rounded-full hover:bg-zinc-100 transition-all duration-300"
-                >
-                  <X size={18} />
-                </button>
-
-                <div className="space-y-4 pr-6">
-                  <span className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] font-semibold">
-                    {selectedItem.category === "lezzet" ? "Last Penny Lezzetleri" : "Last Penny'den"}
-                  </span>
-                  <h2 className="font-[family-name:var(--font-playfair)] font-bold text-2xl text-[var(--color-secondary)]">
-                    {selectedItem.title}
-                  </h2>
-                  <p className="text-sm text-zinc-600 leading-relaxed pt-2">
-                    {selectedItem.description}
-                  </p>
-                </div>
-
-                <div className="pt-6 border-t border-[var(--color-border)] flex items-center justify-between text-xs text-zinc-500">
-                  <span className="flex items-center gap-1.5">
-                    <Camera size={13} className="text-[var(--color-primary)]" />
-                    Last Penny Atmosfer
-                  </span>
-                  <span>Ankara, Kavaklıdere</span>
-                </div>
-              </div>
-            </motion.div>
+            <div className="relative max-w-4xl max-h-[90vh] overflow-hidden">
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="absolute top-4 right-4 z-10 text-white bg-black/40 hover:bg-black/60 p-2 rounded-full backdrop-blur-sm transition-all duration-300"
+              >
+                <X size={20} />
+              </button>
+              <img
+                src={selectedItem.image}
+                alt="Last Penny Galeri Büyütülmüş Görsel"
+                className="w-full h-full object-contain rounded-2xl max-h-[85vh] select-none"
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
