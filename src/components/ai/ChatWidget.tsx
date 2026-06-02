@@ -90,27 +90,27 @@ export default function ChatWidget() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 50 }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="glass-strong w-[350px] sm:w-[400px] h-[500px] rounded-2xl flex flex-col shadow-2xl overflow-hidden mb-4 border border-[var(--color-primary)]/20"
+            className="glass-strong w-[320px] sm:w-[400px] h-[480px] max-h-[80vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden mb-4 border border-[var(--color-primary)]/20 text-[var(--color-secondary)]"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-[var(--color-surface)] to-[var(--color-bg)] p-4 border-b border-white/5 flex items-center justify-between">
+            <div className="bg-[var(--color-surface-hover)] p-4 border-b border-[var(--color-border)] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center">
                   <Sparkles size={14} className="text-white animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="font-[family-name:var(--font-playfair)] font-bold text-sm tracking-wide">
+                  <h3 className="font-[family-name:var(--font-playfair)] font-black text-sm tracking-wide text-[var(--color-primary)]">
                     Last Penny Asistan
                   </h3>
-                  <span className="text-[10px] text-[var(--color-accent)] flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping inline-block" />
+                  <span className="text-[10px] text-[var(--color-accent)] font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-600 animate-ping inline-block" />
                     Çevrimiçi • Gemini AI Destekli
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white/40 hover:text-white/90 p-1.5 rounded-full hover:bg-white/5 transition-colors"
+                className="text-[var(--color-secondary)]/40 hover:text-[var(--color-primary)] p-1.5 rounded-full hover:bg-[var(--color-secondary)]/5 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -128,8 +128,8 @@ export default function ChatWidget() {
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                       msg.role === "user"
-                        ? "bg-[var(--color-primary)] text-[var(--color-secondary)] rounded-tr-none font-medium shadow-md shadow-[var(--color-primary)]/10"
-                        : "bg-[var(--color-surface-hover)] text-white/90 border border-white/5 rounded-tl-none"
+                        ? "bg-[var(--color-primary)] text-white rounded-tr-none font-semibold shadow-sm"
+                        : "bg-[var(--color-surface)] text-[var(--color-secondary)] border border-[var(--color-border)] rounded-tl-none shadow-xs"
                     }`}
                   >
                     {msg.content}
@@ -140,10 +140,10 @@ export default function ChatWidget() {
               {/* Loader */}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-[var(--color-surface-hover)] text-white/90 border border-white/5 rounded-2xl rounded-tl-none px-4 py-3 flex gap-1 items-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] animate-bounce [animation-delay:-0.3s]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] animate-bounce [animation-delay:-0.15s]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] animate-bounce" />
+                  <div className="bg-[var(--color-surface)] text-[var(--color-secondary)] border border-[var(--color-border)] rounded-2xl rounded-tl-none px-4 py-3 flex gap-1 items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] animate-bounce" />
                   </div>
                 </div>
               )}
@@ -152,12 +152,12 @@ export default function ChatWidget() {
 
             {/* Quick Suggestions */}
             {messages.length === 1 && !isLoading && (
-              <div className="px-4 pb-2 pt-1 flex flex-wrap gap-2 justify-center bg-transparent">
+              <div className="px-4 pb-3 pt-1 flex flex-wrap gap-1.5 justify-center bg-transparent">
                 {QUICK_SUGGESTIONS.map((sug, i) => (
                   <button
                     key={i}
                     onClick={() => handleSendMessage(sug.prompt)}
-                    className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] text-white/70 transition-all duration-300 cursor-pointer"
+                    className="text-[10px] font-semibold px-2.5 py-1.5 rounded-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 hover:text-[var(--color-primary)] text-[var(--color-secondary)]/70 transition-all duration-300 cursor-pointer"
                   >
                     {sug.text}
                   </button>
@@ -168,20 +168,20 @@ export default function ChatWidget() {
             {/* Input Form */}
             <form
               onSubmit={handleSubmit}
-              className="p-3 border-t border-white/5 bg-[var(--color-surface)] flex gap-2"
+              className="p-3 border-t border-[var(--color-border)] bg-[var(--color-surface)] flex gap-2"
             >
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Bir soru sor..."
-                className="flex-1 bg-[var(--color-bg)] text-sm rounded-xl px-4 py-2 border border-white/10 text-white/90 placeholder-white/30 focus:border-[var(--color-primary)] focus:outline-none transition-colors"
+                className="flex-1 bg-[var(--color-surface-hover)] text-sm rounded-xl px-4 py-2.5 border border-[var(--color-border)] text-[var(--color-secondary)] placeholder-[var(--color-secondary)]/30 focus:border-[var(--color-primary)] focus:outline-none transition-colors"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="p-2 rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-[var(--color-secondary)] disabled:opacity-50 disabled:hover:bg-[var(--color-primary)] transition-colors cursor-pointer"
+                className="p-2.5 rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-white disabled:opacity-50 disabled:hover:bg-[var(--color-primary)] transition-colors cursor-pointer flex items-center justify-center"
               >
                 <Send size={16} />
               </button>
@@ -193,7 +193,7 @@ export default function ChatWidget() {
       {/* Trigger Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center text-[var(--color-secondary)] shadow-xl cursor-pointer hover:shadow-2xl hover:shadow-[var(--color-primary)]/30 border border-white/10 relative overflow-hidden"
+        className="w-14 h-14 rounded-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] flex items-center justify-center text-white shadow-xl cursor-pointer hover:shadow-2xl hover:shadow-[var(--color-primary)]/30 border border-[var(--color-primary-light)]/20 relative overflow-hidden"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >

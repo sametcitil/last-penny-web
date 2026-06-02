@@ -68,10 +68,10 @@ function LoginFormContent() {
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[var(--color-primary)]/20">
               <Sparkles size={18} className="text-white" />
             </div>
-            <h1 className="text-3xl font-bold font-[family-name:var(--font-playfair)] tracking-wide mb-2 text-white">
+            <h1 className="text-3xl font-bold font-[family-name:var(--font-playfair)] tracking-wide mb-2 text-[var(--color-secondary)]">
               Giriş Yap
             </h1>
-            <p className="text-xs text-white/50">
+            <p className="text-xs text-[var(--color-muted)]">
               Last Penny dünyasına katıl, sipariş ver ve etkinlikleri kaçırma.
             </p>
           </div>
@@ -82,7 +82,7 @@ function LoginFormContent() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-xs text-red-400 bg-red-950/20 border border-red-900/30 p-3.5 rounded-xl text-center font-medium"
+                className="text-xs text-red-600 bg-red-50 border border-red-200 p-3.5 rounded-xl text-center font-medium"
               >
                 {error}
               </motion.div>
@@ -90,17 +90,17 @@ function LoginFormContent() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-xs font-mono uppercase tracking-wider text-white/40 block">
+              <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] block">
                 E-posta Adresi
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-secondary)]/30" size={16} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="isim@example.com"
-                  className="w-full bg-[var(--color-bg)] rounded-xl pl-12 pr-4 py-3 text-sm border border-white/5 text-white/95 placeholder-white/20 transition-all focus:border-[var(--color-primary)]"
+                  className="w-full bg-[var(--color-surface-hover)] rounded-xl pl-12 pr-4 py-3 text-sm border border-[var(--color-border)] text-[var(--color-secondary)] placeholder-[var(--color-secondary)]/30 transition-all focus:border-[var(--color-primary)] focus:bg-white"
                   required
                 />
               </div>
@@ -109,21 +109,21 @@ function LoginFormContent() {
             {/* Password */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-mono uppercase tracking-wider text-white/40 block">
+                <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] block">
                   Şifre
                 </label>
-                <span className="text-[10px] text-white/30 hover:text-[var(--color-accent)] hover:underline cursor-pointer">
+                <span className="text-[10px] text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:underline cursor-pointer">
                   Şifremi unuttum?
                 </span>
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-secondary)]/30" size={16} />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[var(--color-bg)] rounded-xl pl-12 pr-4 py-3 text-sm border border-white/5 text-white/95 placeholder-white/20 transition-all focus:border-[var(--color-primary)]"
+                  className="w-full bg-[var(--color-surface-hover)] rounded-xl pl-12 pr-4 py-3 text-sm border border-[var(--color-border)] text-[var(--color-secondary)] placeholder-[var(--color-secondary)]/30 transition-all focus:border-[var(--color-primary)] focus:bg-white"
                   required
                 />
               </div>
@@ -133,7 +133,7 @@ function LoginFormContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-6 py-3.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-[var(--color-secondary)] font-bold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full mt-6 py-3.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -147,7 +147,7 @@ function LoginFormContent() {
           </form>
 
           {/* Redirect to register */}
-          <div className="text-center mt-8 text-xs text-white/40 relative">
+          <div className="text-center mt-8 text-xs text-[var(--color-muted)] relative">
             Henüz hesabın yok mu?{" "}
             <Link
               href={`/auth/register?redirect=${redirect}`}
@@ -158,10 +158,10 @@ function LoginFormContent() {
           </div>
 
           {/* Quick Demo Credentials */}
-          <div className="mt-8 pt-6 border-t border-white/5 text-center text-[10px] text-white/30 relative space-y-1">
-            <span className="font-semibold text-white/40 uppercase tracking-wider block">Demo Giriş Bilgileri</span>
-            <div>Müşteri: <span className="font-mono text-white/50">user@lastpenny.com</span> / <span className="font-mono text-white/50">user123</span></div>
-            <div>Yönetici: <span className="font-mono text-white/50">admin@lastpenny.com</span> / <span className="font-mono text-white/50">admin123</span></div>
+          <div className="mt-8 pt-6 border-t border-[var(--color-border)] text-center text-[10px] text-[var(--color-muted)] relative space-y-1">
+            <span className="font-semibold text-[var(--color-muted)] uppercase tracking-wider block">Demo Giriş Bilgileri</span>
+            <div>Müşteri: <span className="font-mono text-[var(--color-secondary)]/70">user@lastpenny.com</span> / <span className="font-mono text-[var(--color-secondary)]/70">user123</span></div>
+            <div>Yönetici: <span className="font-mono text-[var(--color-secondary)]/70">admin@lastpenny.com</span> / <span className="font-mono text-[var(--color-secondary)]/70">admin123</span></div>
           </div>
         </motion.div>
       </Container>

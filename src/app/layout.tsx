@@ -5,7 +5,6 @@ import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import ChatWidget from "@/components/ai/ChatWidget";
-import CartDrawer from "@/components/merch/CartDrawer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({
@@ -40,7 +39,6 @@ export default function RootLayout({
             {children}
             <Footer />
             <ChatWidget />
-            <CartDrawer />
           </CartProvider>
         </AuthProvider>
       </body>

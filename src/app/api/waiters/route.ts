@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
-import Waiter from '@/models/Waiter';
+import dbConnect from '@/lib/mongodb';
+import Waiter from '@/lib/models/Waiter';
 
 export async function GET() {
   try {

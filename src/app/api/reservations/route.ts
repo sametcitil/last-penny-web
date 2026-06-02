@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
-import Reservation from '@/models/Reservation';
+import dbConnect from '@/lib/mongodb';
+import Reservation from '@/lib/models/Reservation';
 
 // GET /api/reservations  — tüm rezervasyonları listele (admin)
 export async function GET(req: NextRequest) {

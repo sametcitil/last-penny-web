@@ -9,6 +9,7 @@ if (!MONGODB_URI) {
 interface CachedConnection {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
+  lastFailureTime?: number;
 }
 
 declare global {
@@ -16,7 +17,7 @@ declare global {
   var mongooseCache: CachedConnection | undefined;
 }
 
-const cached: CachedConnection = global.mongooseCache ?? { conn: null, promise: null };
+const cached: CachedConnection = global.mongooseCache ?? { conn: null, promise: null, lastFailureTime: 0 };
 
 if (!global.mongooseCache) {
   global.mongooseCache = cached;
@@ -25,9 +26,17 @@ if (!global.mongooseCache) {
 async function dbConnect(): Promise<typeof mongoose> {
   if (cached.conn) return cached.conn;
 
+  // Cool-off state: If connection failed in the last 30 seconds, fail immediately without trying
+  const now = Date.now();
+  const lastFailure = cached.lastFailureTime || 0;
+  if (now - lastFailure < 30000) {
+    throw new Error("MongoDB connection in cool-off state due to recent failure (IP whitelist issue?).");
+  }
+
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 2000, // Fail after 2 seconds instead of 30 seconds
     });
   }
 
@@ -35,6 +44,7 @@ async function dbConnect(): Promise<typeof mongoose> {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
+    cached.lastFailureTime = Date.now();
     throw e;
   }
 
