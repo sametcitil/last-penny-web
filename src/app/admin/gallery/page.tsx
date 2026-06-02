@@ -7,7 +7,7 @@ import { Plus, Edit2, Trash2, RefreshCw, X, Camera, Image, Sparkles } from "luci
 interface GalleryItemType {
   _id: string;
   title: string;
-  category: "mekan" | "muzik" | "kokteyl" | "topluluk";
+  category: "lezzet" | "mekan";
   description: string;
   gradient: string;
   iconName: string;
@@ -17,10 +17,8 @@ interface GalleryItemType {
 
 const CATEGORIES = [
   { id: "all", label: "Tüm Kategoriler" },
-  { id: "mekan", label: "Mekan" },
-  { id: "muzik", label: "Müzik" },
-  { id: "kokteyl", label: "Kokteyller" },
-  { id: "topluluk", label: "Topluluk" },
+  { id: "lezzet", label: "Last Penny Lezzetleri" },
+  { id: "mekan", label: "Last Penny'den" },
 ];
 
 const ICONS = ["Coffee", "Music", "Sparkles", "Heart", "Camera"];
@@ -45,7 +43,7 @@ export default function AdminGalleryPage() {
 
   // Form states
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<GalleryItemType["category"]>("mekan");
+  const [category, setCategory] = useState<GalleryItemType["category"]>("lezzet");
   const [description, setDescription] = useState("");
   const [gradient, setGradient] = useState(GRADIENTS[0].value);
   const [iconName, setIconName] = useState("Coffee");
@@ -79,7 +77,7 @@ export default function AdminGalleryPage() {
   const openAddModal = () => {
     setEditingItem(null);
     setTitle("");
-    setCategory("mekan");
+    setCategory("lezzet");
     setDescription("");
     setGradient(GRADIENTS[0].value);
     setIconName("Coffee");
@@ -241,7 +239,7 @@ export default function AdminGalleryPage() {
                 <div className="absolute inset-0 bg-black/10" />
                 <div className="z-10 text-center">
                   <span className="text-[9px] tracking-[0.2em] font-mono text-amber-200 block uppercase font-bold mb-1">
-                    {item.category}
+                    {item.category === "lezzet" ? "Lezzet" : "Mekan"}
                   </span>
                   <h4 className="font-bold text-white text-sm line-clamp-1 font-[family-name:var(--font-playfair)]">
                     {item.title}
@@ -350,10 +348,8 @@ export default function AdminGalleryPage() {
                       onChange={(e) => setCategory(e.target.value as GalleryItemType["category"])}
                       className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white focus:outline-none"
                     >
-                      <option value="mekan">Mekan Görselleri</option>
-                      <option value="muzik">Müzik Performansı</option>
-                      <option value="kokteyl">Kokteyller</option>
-                      <option value="topluluk">Söyleşiler / Kulüpler</option>
+                      <option value="lezzet">Last Penny Lezzetleri (Yemek, Kokteyl vb.)</option>
+                      <option value="mekan">Last Penny'den (Mekan Fotoğrafları)</option>
                     </select>
                   </div>
 

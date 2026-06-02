@@ -388,7 +388,7 @@ export const mockGalleryItems = [
   {
     _id: "g2",
     title: "Gece Yarısı Caz Seansı",
-    category: "muzik" as const,
+    category: "mekan" as const,
     description: "Haftalık canlı caz quartet performansından nefes kesen anlar.",
     gradient: "from-indigo-950/80 via-slate-900 to-purple-900/80",
     iconName: "Music",
@@ -398,7 +398,7 @@ export const mockGalleryItems = [
   {
     _id: "g3",
     title: "Last Penny İmza Kokteylleri",
-    category: "kokteyl" as const,
+    category: "lezzet" as const,
     description: "Bar ekibimizin taze meyveler ve el yapımı şuruplarla hazırladığı sunumlar.",
     gradient: "from-red-950/80 via-slate-900 to-rose-900/80",
     iconName: "Sparkles",
@@ -408,7 +408,7 @@ export const mockGalleryItems = [
   {
     _id: "g4",
     title: "Kitap Kulübü & Söyleşiler",
-    category: "topluluk" as const,
+    category: "mekan" as const,
     description: "Her Pazar topluluğumuzla bir araya gelip edebiyat ve felsefe konuştuğumuz anlar.",
     gradient: "from-teal-950/80 via-slate-900 to-emerald-900/80",
     iconName: "Coffee",
@@ -428,7 +428,7 @@ export const mockGalleryItems = [
   {
     _id: "g6",
     title: "Dostlarla Hafta Sonu",
-    category: "topluluk" as const,
+    category: "mekan" as const,
     description: "Cumartesi kahvaltısı ve Pazar kokteylleriyle paylaşılan neşeli anlar.",
     gradient: "from-fuchsia-950/80 via-slate-900 to-violet-900/80",
     iconName: "Heart",

@@ -17,7 +17,7 @@ interface GalleryItem {
   id?: string;
   _id?: string;
   title: string;
-  category: "mekan" | "muzik" | "kokteyl" | "topluluk";
+  category: "lezzet" | "mekan";
   description: string;
   gradient: string;
   icon?: LucideIcon;
@@ -26,6 +26,15 @@ interface GalleryItem {
   quoteAuthor?: string;
 }
 
+const SECTIONS = [
+  { id: "lezzet", label: "Last Penny Lezzetleri" },
+  { id: "mekan", label: "Last Penny'den" },
+];
+
+const TABS = [
+  { id: "all", label: "Tümü" },
+  ...SECTIONS,
+];
 
 const GALLERY_ITEMS: GalleryItem[] = [
   {
@@ -34,36 +43,36 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: "mekan",
     description: "Plak dolabı, vintage hoparlörler ve loş ışıklar eşliğinde dinlenme köşesi.",
     gradient: "from-amber-950/80 via-slate-900 to-amber-900/80",
-    icon: Coffee,
+    iconName: "Coffee",
     quote: "Müzik, hislerin kelimelerle ifade edilemeyen kısmıdır.",
     quoteAuthor: "Leo Tolstoy",
   },
   {
     id: "g2",
     title: "Gece Yarısı Caz Seansı",
-    category: "muzik",
+    category: "mekan",
     description: "Haftalık canlı caz quartet performansından nefes kesen anlar.",
     gradient: "from-indigo-950/80 via-slate-900 to-purple-900/80",
-    icon: Music,
+    iconName: "Music",
     quote: "Caz, özgürlüğün sesidir.",
     quoteAuthor: "Thelonious Monk",
   },
   {
     id: "g3",
     title: "Last Penny İmza Kokteylleri",
-    category: "kokteyl",
+    category: "lezzet",
     description: "Bar ekibimizin taze meyveler ve el yapımı şuruplarla hazırladığı sunumlar.",
     gradient: "from-red-950/80 via-slate-900 to-rose-900/80",
-    icon: Sparkles,
+    iconName: "Sparkles",
     quote: "Sanat, lezzetin bardağa dökülmüş halidir.",
   },
   {
     id: "g4",
     title: "Kitap Kulübü & Söyleşiler",
-    category: "topluluk",
+    category: "mekan",
     description: "Her Pazar topluluğumuzla bir araya gelip edebiyat ve felsefe konuştuğumuz anlar.",
     gradient: "from-teal-950/80 via-slate-900 to-emerald-900/80",
-    icon: Coffee,
+    iconName: "Coffee",
     quote: "Paylaşmak, topluluk olmanın ilk adımıdır.",
   },
   {
@@ -72,21 +81,22 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: "mekan",
     description: "Mekanın ruhunu belirleyen 1970'lerden kalma pikap ve analog tınılar.",
     gradient: "from-yellow-950/80 via-slate-900 to-amber-950/80",
-    icon: Music,
+    iconName: "Music",
     quote: "Sesin en sıcak hali plaktan yükselendir.",
   },
   {
     id: "g6",
     title: "Dostlarla Hafta Sonu",
-    category: "topluluk",
+    category: "mekan",
     description: "Cumartesi kahvaltısı ve Pazar kokteylleriyle paylaşılan neşeli anlar.",
     gradient: "from-fuchsia-950/80 via-slate-900 to-violet-900/80",
-    icon: Heart,
+    iconName: "Heart",
     quote: "En güzel hikayeler, Last Penny masalarında yazılır.",
   },
 ];
 
 export default function GalleryPage() {
+  const [activeSection, setActiveSection] = useState("all");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
@@ -111,6 +121,45 @@ export default function GalleryPage() {
     };
     fetchGallery();
   }, []);
+
+  // Scrollspy: Sayfa kaydırıldıkça sekmeyi güncelleme
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY < 100) {
+        setActiveSection("all");
+        return;
+      }
+
+      const scrollPosition = window.scrollY + 160;
+
+      for (let i = SECTIONS.length - 1; i >= 0; i--) {
+        const sec = SECTIONS[i];
+        const el = document.getElementById(`section-${sec.id}`);
+        if (el && el.offsetTop <= scrollPosition) {
+          setActiveSection(sec.id);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Smooth scroll
+  const handleTabClick = (id: string) => {
+    setActiveSection(id);
+    if (id === "all") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const element = document.getElementById(`section-${id}`);
+    if (element) {
+      const yOffset = -140;
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
 
   return (
     <main className="pt-24 pb-20 min-h-screen bg-[var(--color-bg)]">
@@ -142,69 +191,106 @@ export default function GalleryPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-sm md:text-base text-zinc-600 leading-relaxed"
             >
-              Last Penny Kavaklıdere&apos;nin eşsiz vintage dekorasyonu, samimi topluluk buluşmaları ve müzik gecelerinden sanatsal kareler.
+              Last Penny Kavaklıdere&apos;nin vintage atmosferi, müzik geceleri ve mutfağımızdan çıkan sunumların kareleri.
             </motion.p>
           </div>
         </Container>
       </section>
 
-      {/* Grid */}
+      {/* Sticky Tab Filters */}
+      <section className="sticky top-[72px] z-40 bg-[var(--color-bg)]/90 backdrop-blur-md py-6 border-b border-[var(--color-border)]">
+        <Container>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none snap-x w-full">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id)}
+                className={`px-4 py-2 text-xs font-bold rounded-full border transition-all duration-300 whitespace-nowrap cursor-pointer snap-start min-h-[38px] flex items-center justify-center ${
+                  activeSection === tab.id
+                    ? "border-[var(--color-primary)] text-white bg-[var(--color-primary)] shadow-xs"
+                    : "border-[var(--color-border)] text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] hover:border-[var(--color-secondary)]/30 bg-[var(--color-surface)]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* Grouped Gallery Grid */}
       <section className="py-12">
         <Container>
-          <motion.div
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            <AnimatePresence mode="popLayout">
-              {loading ? (
-                <div className="col-span-full text-center py-20 text-stone-500 font-semibold animate-pulse">Fotoğraflar yükleniyor...</div>
-              ) : items.map((item) => {
-                const IconComponent = iconMap[item.iconName] || item.icon || Camera;
+          {loading ? (
+            <div className="text-center py-20 text-stone-500 font-semibold animate-pulse">Fotoğraflar yükleniyor...</div>
+          ) : (
+            <div className="space-y-16">
+              {SECTIONS.map((section) => {
+                const sectionItems = items.filter((item) => item.category === section.id);
+                if (sectionItems.length === 0) return null;
+
                 return (
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.4 }}
-                    key={item._id || item.id}
-                    onClick={() => setSelectedItem(item)}
-                    className="bg-white group relative h-80 rounded-none border-[12px] border-[#3E2723] p-3 shadow-lg hover:shadow-2xl hover:scale-[1.01] cursor-pointer transition-all duration-500 flex flex-col justify-between"
+                  <section
+                    key={section.id}
+                    id={`section-${section.id}`}
+                    style={{ scrollMarginTop: "150px" }}
+                    className="scroll-mt-40"
                   >
-                    {/* Mat/Paspartu border inside the wood frame */}
-                    <div className="relative w-full h-full bg-[#FAF9F6] border border-stone-200 p-4 flex flex-col justify-between overflow-hidden">
-                      {/* Inner artwork gradient representation */}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-80 group-hover:opacity-90 transition-opacity duration-500`} />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                      
-                      {/* Visual details */}
-                      <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/70 group-hover:text-white transition-all duration-300">
-                        <Maximize2 size={12} className="group-hover:scale-110" />
-                      </div>
-
-                      {/* Accent Icon */}
-                      <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-amber-200 z-10">
-                        <IconComponent size={18} />
-                      </div>
-
-                      {/* Card Content Overlay */}
-                      <div className="z-10 mt-auto">
-                        <span className="text-[9px] font-mono tracking-widest text-amber-200 uppercase mb-1 block">
-                          {item.category}
-                        </span>
-                        <h3 className="font-semibold text-base font-[family-name:var(--font-playfair)] text-white/90 group-hover:text-white transition-colors">
-                          {item.title}
-                        </h3>
-                        <p className="text-[11px] text-white/70 mt-1 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          {item.description}
-                        </p>
-                      </div>
+                    {/* Section Header */}
+                    <div className="border-b border-[var(--color-border)] pb-3 mb-8">
+                      <h2 className="text-xl md:text-2xl font-black font-[family-name:var(--font-playfair)] tracking-wide text-[var(--color-primary)]">
+                        {section.label}
+                      </h2>
                     </div>
-                  </motion.div>
+
+                    {/* Sade Modern Art Gallery Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+                      {sectionItems.map((item) => {
+                        const IconComponent = iconMap[item.iconName] || item.icon || Camera;
+                        return (
+                          <motion.div
+                            layout
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            key={item._id || item.id}
+                            onClick={() => setSelectedItem(item)}
+                            className="flex flex-col gap-3 group cursor-pointer"
+                          >
+                            {/* Visual Art Box */}
+                            <div className={`relative h-60 rounded-2xl bg-gradient-to-br ${item.gradient} overflow-hidden shadow-xs group-hover:shadow-md group-hover:scale-[1.01] transition-all duration-300`}>
+                              <div className="absolute inset-0 bg-black/15 group-hover:bg-black/5 transition-colors duration-300" />
+                              
+                              {/* Maximize Icon Overlay */}
+                              <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/70 group-hover:text-white transition-all duration-300">
+                                <Maximize2 size={12} className="group-hover:scale-110" />
+                              </div>
+
+                              {/* Center Icon */}
+                              <div className="absolute inset-0 flex items-center justify-center text-white/20 group-hover:text-white/40 transition-colors duration-300">
+                                <IconComponent size={40} strokeWidth={1} />
+                              </div>
+                            </div>
+
+                            {/* Caption Underneath */}
+                            <div className="space-y-1 px-1">
+                              <h3 className="font-bold text-base text-[var(--color-secondary)]/90 group-hover:text-[var(--color-primary)] transition-colors duration-300 font-[family-name:var(--font-playfair)]">
+                                {item.title}
+                              </h3>
+                              <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                                {item.description}
+                              </p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </section>
                 );
               })}
-            </AnimatePresence>
-          </motion.div>
+            </div>
+          )}
         </Container>
       </section>
 
@@ -228,13 +314,12 @@ export default function GalleryPage() {
               {/* Left visual representation */}
               <div className={`md:w-1/2 h-64 md:h-full bg-gradient-to-br ${selectedItem.gradient} relative flex flex-col items-center justify-center p-8 border-b md:border-b-0 md:border-r border-[var(--color-border)] overflow-hidden`}>
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent)]" />
-                {/* Visual shapes */}
                 <div className="absolute -left-20 -top-20 w-64 h-64 bg-white/5 rounded-full filter blur-3xl pointer-events-none" />
                 <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-[var(--color-primary)]/10 rounded-full filter blur-3xl pointer-events-none" />
 
                 {selectedItem.quote ? (
                   <div className="text-center z-10">
-                    <p className="font-[family-name:var(--font-playfair)] italic text-xl md:text-2xl text-white mb-3">
+                    <p className="font-[family-name:var(--font-playfair)] italic text-xl md:text-2xl text-white mb-3 leading-relaxed">
                       &ldquo;{selectedItem.quote}&rdquo;
                     </p>
                     {selectedItem.quoteAuthor && (
@@ -260,7 +345,6 @@ export default function GalleryPage() {
 
               {/* Right content details */}
               <div className="md:w-1/2 p-8 flex flex-col justify-between relative bg-white">
-                {/* Close Button */}
                 <button
                   onClick={() => setSelectedItem(null)}
                   className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-800 p-1.5 rounded-full hover:bg-zinc-100 transition-all duration-300"
@@ -270,7 +354,7 @@ export default function GalleryPage() {
 
                 <div className="space-y-4 pr-6">
                   <span className="text-xs font-mono uppercase tracking-widest text-[var(--color-accent)] font-semibold">
-                    {selectedItem.category}
+                    {selectedItem.category === "lezzet" ? "Last Penny Lezzetleri" : "Last Penny'den"}
                   </span>
                   <h2 className="font-[family-name:var(--font-playfair)] font-bold text-2xl text-[var(--color-secondary)]">
                     {selectedItem.title}

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IGalleryItem extends Document {
   title: string;
-  category: "mekan" | "muzik" | "kokteyl" | "topluluk";
+  category: "lezzet" | "mekan";
   description: string;
   gradient: string;
   iconName: string; // e.g., 'Coffee', 'Music', 'Sparkles', 'Heart'
@@ -16,7 +16,7 @@ const GalleryItemSchema = new Schema<IGalleryItem>(
     title: { type: String, required: true, trim: true },
     category: {
       type: String,
-      enum: ["mekan", "muzik", "kokteyl", "topluluk"],
+      enum: ["lezzet", "mekan"],
       required: true,
     },
     description: { type: String, required: true },
