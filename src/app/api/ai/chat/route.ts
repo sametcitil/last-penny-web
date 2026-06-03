@@ -105,6 +105,7 @@ Last Penny, Ankara Kavaklıdere'de bulunan caz, kültür ve topluluk temalı sı
 3. KESİNTİSİZ İÇERİK KURALI: Müşteri bir yiyecek veya içecek talep ettiğinde (Örn: "tatlı bir içecek", "acı bir yemek"), menü bağlamında sana iletilen ürünün adını ve fiyatını söylerken, İÇERİĞİNİ/AÇIKLAMASINI da müşterinin isteğine tam uyacak şekilde gurme ve detaylı bir dille açıkla! Müşteriye sadece ürün adı söyleyip geçmek kesinlikle yasaktır.
 4. Müşteri senden "başka", "farklı" veya "alternatif" bir şey istediğinde, sohbet geçmişinde daha önce sunduğun ürünü ASLA tekrar önerme! Menüdeki diğer alternatif kombinasyonlara geçiş yap.
 5. "Yapay zeka analizime göre" veya "veritabanı" gibi robotik kalıplar kullanman KESİNLİKLE YASAKTIR. Gerçek bir barmen gibi samimi, esnek, kısa and öz yanıtlar ver (maksimum 3-4 cümle).
+6. Müşteri bar, menü, yemek, içecek, Ankara Kavaklıdere şubesi veya etkinlikler ile tamamen alakasız/tutarsız mesajlar yazdığında (örneğin matematik, programlama, alakasız genel kültür soruları vb.), gerçek bir barmen gibi kibarca bu konulardan anlamadığını söyle ve soruyu Last Penny menüsü veya etkinliklerine getirecek şekilde yönlendir.
 
 ## DAHA ÖNCE ÖNERDİĞİN ÜRÜNLER (BUNLARI TEKRAR ETME):
 ${pastModelReplies}
@@ -174,6 +175,29 @@ ${menuContext}`;
     const foods = availableMenu.filter(item => foodCategories.includes(item.category));
 
     if (userLimit) userLimit.count += 1;
+
+    // ─── İLGİLİ İÇERİK KONTROLÜ (CLASSIFIER) ───
+    const relatedKeywords = [
+      "menü", "menu", "kategori", "öneri", "öner", "tavsiye", "seç", "liste", "kart",
+      "merhaba", "selam", "slm", "mrh", "hey", "iyi günler", "iyi akşamlar", "hoş bulduk", "hos bulduk",
+      "içecek", "icecek", "içki", "icki", "alkol", "bira", "beer", "kokteyl", "cocktail", "viski", "whiskey", "whisky", 
+      "şarap", "sarap", "wine", "blush", "rose", "köpüklü", "kopuklu", "sangria", "shot", "snaps", "kahve", "çay", "cay", 
+      "soda", "kola", "cola", "gazoz", "su", "süt", "sut",
+      "yemek", "ye", "burger", "açım", "acım", "aç", "yiyecek", "tapas", "nachos", "sosis", "köfte", "kofte", "tavuk", 
+      "fish", "chips", "patates", "bravas", "falafel", "mücver", "mucver", "humus", "salata", "peynir", "zeytin", "tost", 
+      "gözleme", "gozleme", "kahvaltı", "kahvalti", "omlet", "sucuk", "tatlı", "tatli", "sufle", "cheesecake", "brownie",
+      "nerede", "adres", "konum", "saat", "kaçta", "kapanış", "kapanis", "açılış", "acilis", "rezervasyon", "telefon", 
+      "iletisim", "iletişim", "etkinlik", "konser", "müzik", "teşekkür", "tesekkur", "sağol", "sagol", "eyvallah"
+    ];
+
+    const isRelated = relatedKeywords.some(keyword => lower.includes(keyword)) || lower.startsWith("[form_submit]");
+
+    if (!isRelated) {
+      return NextResponse.json({
+        reply: "Last Penny barmeni Penny olarak bu söylediğini tam anlayamadım dostum. Bana menümüz, kokteyllerimiz, soğuk biralarımız, nefis şef yemeklerimiz veya yaklaşan etkinliklerimiz hakkında sorular sorabilirsin! 🎶🍷",
+        remainingRights: 10 - count
+      });
+    }
 
     // SİMÜLATÖR KORUMASI: Yalın Selamlama Algılayıcı (En başta tetiklenir)
     if (lower === "merhaba" || lower === "selam" || lower === "slm" || lower === "mrh" || lower === "hey" || lower === "iyi günler") {
