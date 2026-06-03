@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Music, Calendar, ChevronRight, Sparkles, MessageSquare, ArrowUpRight } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Link from "next/link";
-import { mockEvents, mockMenuItems } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
 
 const eventCategories = {
   jazz: "border-[var(--color-primary)]/30 hover:border-[var(--color-primary)] bg-[var(--color-surface)] shadow-xs",
@@ -16,8 +16,35 @@ const eventCategories = {
 };
 
 export default function HomePage() {
-  const featuredEvents = mockEvents.filter((e) => e.isFeatured).slice(0, 3);
-  const featuredMenu = mockMenuItems.filter((m) => m.isFeatured).slice(0, 3);
+  const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
+  const [featuredMenu, setFeaturedMenu] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [eventsRes, menuRes] = await Promise.all([
+          fetch("/api/events?featured=true"),
+          fetch("/api/menu")
+        ]);
+
+        if (eventsRes.ok) {
+          const eventsData = await eventsRes.json();
+          setFeaturedEvents((eventsData.events || []).filter((e: any) => e.isFeatured).slice(0, 3));
+        }
+
+        if (menuRes.ok) {
+          const menuData = await menuRes.json();
+          setFeaturedMenu((menuData.items || []).filter((m: any) => m.isFeatured).slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Anasayfa veri çekme hatası:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -164,35 +191,54 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredEvents.map((e, index) => (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                key={e._id}
-                className={`p-6 rounded-2xl border ${
-                  eventCategories[e.category] || eventCategories.other
-                } hover:shadow-md transition-all duration-500 flex flex-col justify-between h-[240px] group border-2 border-[var(--color-secondary)]`}
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-[10px] font-mono text-[var(--color-primary)] font-bold">{e.time} • {new Date(e.date).toLocaleDateString("tr-TR", { weekday: "short", day: "numeric", month: "short" })}</span>
-                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)] animate-pulse" />
+            {loading ? (
+              [...Array(3)].map((_, idx) => (
+                <div key={idx} className="p-6 rounded-2xl border-2 border-[var(--color-secondary)]/10 bg-[var(--color-surface)] h-[240px] animate-pulse flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="h-4 bg-[var(--color-secondary)]/10 rounded w-1/3" />
+                    <div className="h-6 bg-[var(--color-secondary)]/10 rounded w-3/4" />
+                    <div className="h-12 bg-[var(--color-secondary)]/10 rounded w-full" />
                   </div>
-                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors line-clamp-2">
-                    {e.title}
-                  </h3>
-                  <p className="text-xs text-[var(--color-secondary)]/60 mt-2 line-clamp-3 leading-relaxed">
-                    {e.description}
-                  </p>
+                  <div className="h-4 bg-[var(--color-secondary)]/10 rounded w-1/4" />
                 </div>
-                <div className="pt-4 border-t border-[var(--color-border)] flex justify-between items-center text-[10px] text-[var(--color-secondary)]/40 font-mono uppercase tracking-wider">
-                  <span>Giriş Serbest</span>
-                  <span className="text-[var(--color-primary)] font-bold">Sahne Alıyor</span>
-                </div>
-              </motion.div>
-            ))}
+              ))
+            ) : featuredEvents.length === 0 ? (
+              <div className="col-span-3 text-center py-12 text-[var(--color-secondary)]/40 font-mono text-xs">
+                Yakında yeni etkinlikler eklenecektir.
+              </div>
+            ) : (
+              featuredEvents.map((e, index) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  key={e._id}
+                  className={`p-6 rounded-2xl border ${
+                    eventCategories[e.category as keyof typeof eventCategories] || eventCategories.other
+                  } hover:shadow-md transition-all duration-500 flex flex-col justify-between h-[240px] group border-2 border-[var(--color-secondary)]`}
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="text-[10px] font-mono text-[var(--color-primary)] font-bold">
+                        {e.time} • {new Date(e.date).toLocaleDateString("tr-TR", { weekday: "short", day: "numeric", month: "short" })}
+                      </span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)] animate-pulse" />
+                    </div>
+                    <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors line-clamp-2">
+                      {e.title}
+                    </h3>
+                    <p className="text-xs text-[var(--color-secondary)]/60 mt-2 line-clamp-3 leading-relaxed">
+                      {e.description}
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-[var(--color-border)] flex justify-between items-center text-[10px] text-[var(--color-secondary)]/40 font-mono uppercase tracking-wider">
+                    <span>Giriş Serbest</span>
+                    <span className="text-[var(--color-primary)] font-bold">Sahne Alıyor</span>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </Container>
       </section>
@@ -241,35 +287,51 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredMenu.map((m, index) => (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                key={m._id}
-                className="bg-[var(--color-surface)] p-6 rounded-2xl flex flex-col justify-between h-[200px] border border-[var(--color-border)] shadow-xs hover:border-[var(--color-primary)]/40 hover:shadow-md transition-all duration-300 relative before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-1.5 before:bg-[var(--color-primary)] before:rounded-t-2xl"
-              >
-                <div>
-                  <div className="flex justify-between items-start gap-4 mb-2">
-                    <h3 className="font-bold text-base text-[var(--color-secondary)]/90">
-                      {m.name}
-                    </h3>
-                    <span className="flex items-center gap-1 text-[8px] bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-[var(--color-primary)] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                      <Sparkles size={8} />
-                      Favori
-                    </span>
+            {loading ? (
+              [...Array(3)].map((_, idx) => (
+                <div key={idx} className="bg-[var(--color-surface)] p-6 rounded-2xl h-[200px] border border-[var(--color-border)] animate-pulse flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="h-5 bg-[var(--color-secondary)]/10 rounded w-1/2" />
+                    <div className="h-12 bg-[var(--color-secondary)]/10 rounded w-full" />
                   </div>
-                  <p className="text-xs text-[var(--color-secondary)]/60 line-clamp-3 leading-relaxed">
-                    {m.description}
-                  </p>
+                  <div className="h-5 bg-[var(--color-secondary)]/10 rounded w-1/4" />
                 </div>
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-[var(--color-border)]/50">
-                  <span className="text-[10px] text-[var(--color-secondary)]/40 uppercase tracking-widest font-mono font-bold">{m.category}</span>
-                  <span className="font-bold text-[var(--color-primary)] font-mono text-base">₺{m.price}</span>
-                </div>
-              </motion.div>
-            ))}
+              ))
+            ) : featuredMenu.length === 0 ? (
+              <div className="col-span-3 text-center py-12 text-[var(--color-secondary)]/40 font-mono text-xs">
+                Öne çıkan menü öğeleri bulunamadı.
+              </div>
+            ) : (
+              featuredMenu.map((m, index) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  key={m._id}
+                  className="bg-[var(--color-surface)] p-6 rounded-2xl flex flex-col justify-between h-[200px] border border-[var(--color-border)] shadow-xs hover:border-[var(--color-primary)]/40 hover:shadow-md transition-all duration-300 relative before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-1.5 before:bg-[var(--color-primary)] before:rounded-t-2xl"
+                >
+                  <div>
+                    <div className="flex justify-between items-start gap-4 mb-2">
+                      <h3 className="font-bold text-base text-[var(--color-secondary)]/90">
+                        {m.name}
+                      </h3>
+                      <span className="flex items-center gap-1 text-[8px] bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-[var(--color-primary)] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                        <Sparkles size={8} />
+                        Favori
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--color-secondary)]/60 line-clamp-3 leading-relaxed">
+                      {m.description}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center mt-4 pt-4 border-t border-[var(--color-border)]/50">
+                    <span className="text-[10px] text-[var(--color-secondary)]/40 uppercase tracking-widest font-mono font-bold">{m.category}</span>
+                    <span className="font-bold text-[var(--color-primary)] font-mono text-base">₺{m.price}</span>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </Container>
       </section>

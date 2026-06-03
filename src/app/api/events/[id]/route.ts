@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Event from "@/lib/models/Event";
-import { mockEvents } from "@/lib/mock-data";
 import { getCurrentUser } from "@/lib/auth";
 
 // PUT /api/events/:id
@@ -21,27 +20,17 @@ export async function PUT(
       body.image = body.images[0];
     }
 
-    try {
-      await dbConnect();
-      const event = await Event.findByIdAndUpdate(id, body, {
-        new: true,
-        runValidators: true,
-      });
+    await dbConnect();
+    const event = await Event.findByIdAndUpdate(id, body, {
+      new: true,
+      runValidators: true,
+    });
 
-      if (!event) {
-        return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
-      }
-
-      return NextResponse.json({ event });
-    } catch (dbErr: any) {
-      console.warn("[PUT /api/events/:id] Database failed, using mock fallback:", dbErr?.message || dbErr);
-      const idx = mockEvents.findIndex((e) => e._id === id);
-      if (idx === -1) {
-        return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
-      }
-      mockEvents[idx] = { ...mockEvents[idx], ...body };
-      return NextResponse.json({ event: mockEvents[idx], isMock: true });
+    if (!event) {
+      return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
     }
+
+    return NextResponse.json({ event });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Sunucu hatası";
     return NextResponse.json({ error: message }, { status: 400 });
@@ -65,27 +54,17 @@ export async function PATCH(
       body.image = body.images[0];
     }
 
-    try {
-      await dbConnect();
-      const event = await Event.findByIdAndUpdate(id, body, {
-        new: true,
-        runValidators: true,
-      });
+    await dbConnect();
+    const event = await Event.findByIdAndUpdate(id, body, {
+      new: true,
+      runValidators: true,
+    });
 
-      if (!event) {
-        return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
-      }
-
-      return NextResponse.json({ event });
-    } catch (dbErr: any) {
-      console.warn("[PATCH /api/events/:id] Database failed, using mock fallback:", dbErr?.message || dbErr);
-      const idx = mockEvents.findIndex((e) => e._id === id);
-      if (idx === -1) {
-        return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
-      }
-      mockEvents[idx] = { ...mockEvents[idx], ...body };
-      return NextResponse.json({ event: mockEvents[idx], isMock: true });
+    if (!event) {
+      return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
     }
+
+    return NextResponse.json({ event });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Sunucu hatası";
     return NextResponse.json({ error: message }, { status: 400 });
@@ -105,25 +84,16 @@ export async function DELETE(
 
     const { id } = await params;
 
-    try {
-      await dbConnect();
-      const event = await Event.findByIdAndDelete(id);
+    await dbConnect();
+    const event = await Event.findByIdAndDelete(id);
 
-      if (!event) {
-        return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
-      }
-
-      return NextResponse.json({ success: true, message: "Etkinlik silindi" });
-    } catch (dbErr: any) {
-      console.warn("[DELETE /api/events/:id] Database failed, using mock fallback:", dbErr?.message || dbErr);
-      const idx = mockEvents.findIndex((e) => e._id === id);
-      if (idx === -1) {
-        return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
-      }
-      mockEvents.splice(idx, 1);
-      return NextResponse.json({ success: true, isMock: true, message: "Etkinlik silindi" });
+    if (!event) {
+      return NextResponse.json({ error: "Etkinlik bulunamadı" }, { status: 404 });
     }
-  } catch {
-    return NextResponse.json({ error: "Sunucu hatası" }, { status: 500 });
+
+    return NextResponse.json({ success: true, message: "Etkinlik silindi" });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Sunucu hatası";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

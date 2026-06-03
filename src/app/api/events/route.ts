@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Event from "@/lib/models/Event";
-import { mockEvents } from "@/lib/mock-data";
 import { getCurrentUser } from "@/lib/auth";
 
 // GET all events
@@ -22,32 +21,13 @@ export async function GET(req: NextRequest) {
     }
 
     const events = await Event.find(filter).sort({ date: 1 });
-    
-    // If DB is empty, return static items
-    if (events.length === 0) {
-      let staticEvents = [...mockEvents];
-      if (category && category !== "all") {
-        staticEvents = staticEvents.filter((e) => e.category === category);
-      }
-      if (featured === "true") {
-        staticEvents = staticEvents.filter((e) => e.isFeatured);
-      }
-      staticEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      return NextResponse.json({ events: staticEvents });
-    }
-
     return NextResponse.json({ events });
   } catch (err: any) {
-    console.warn("[GET /api/events] Database failed, using mock fallback:", err?.message || err);
-    let staticEvents = [...mockEvents];
-    if (category && category !== "all") {
-      staticEvents = staticEvents.filter((e) => e.category === category);
-    }
-    if (featured === "true") {
-      staticEvents = staticEvents.filter((e) => e.isFeatured);
-    }
-    staticEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    return NextResponse.json({ events: staticEvents });
+    console.error("[GET /api/events] Database failure:", err);
+    return NextResponse.json(
+      { error: "Etkinlikler yüklenemedi", details: err?.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -64,28 +44,9 @@ export async function POST(req: NextRequest) {
       body.image = body.images[0];
     }
 
-    try {
-      await dbConnect();
-      const event = await Event.create(body);
-      return NextResponse.json({ event }, { status: 201 });
-    } catch (dbErr: any) {
-      console.warn("[POST /api/events] Database failed, using mock fallback:", dbErr?.message || dbErr);
-      const newEvent = {
-        _id: `mock-event-${Date.now()}`,
-        title: body.title,
-        description: body.description || "",
-        date: body.date || new Date().toISOString(),
-        time: body.time || "21:00",
-        category: body.category || "jazz",
-        isFeatured: body.isFeatured || false,
-        image: body.image || "",
-        images: body.images || [body.image || ""],
-        price: body.price || 0,
-        location: body.location || "LP Kavaklıdere Sahne",
-      };
-      mockEvents.unshift(newEvent);
-      return NextResponse.json({ event: newEvent, isMock: true }, { status: 201 });
-    }
+    await dbConnect();
+    const event = await Event.create(body);
+    return NextResponse.json({ event }, { status: 201 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Sunucu hatası";
     return NextResponse.json({ error: message }, { status: 400 });

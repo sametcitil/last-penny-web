@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mockMenuItems } from "@/lib/mock-data";
+import dbConnect from "@/lib/mongodb";
+import MenuItem from "@/lib/models/MenuItem";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,9 +10,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Mesaj gerekli" }, { status: 400 });
     }
 
-    // Build menu context for AI
-    const menuContext = mockMenuItems
-      .filter((item) => item.isAvailable)
+    // Build menu context for AI from database
+    let menuItems: any[] = [];
+    try {
+      await dbConnect();
+      menuItems = await MenuItem.find({ isAvailable: true });
+    } catch (dbErr) {
+      console.error("AI Chat: Failed to load menu from DB:", dbErr);
+    }
+
+    const menuContext = menuItems
       .map(
         (item) =>
           `- ${item.name} (${item.category}): ${item.description} — ₺${item.price}`
@@ -82,7 +90,7 @@ Kurallar:
     }
 
     // Fallback: rule-based responses
-    const reply = getFallbackReply(message, mockMenuItems);
+    const reply = getFallbackReply(message, menuItems);
     return NextResponse.json({ reply });
   } catch (error) {
     console.error("Chat error:", error);
@@ -111,16 +119,25 @@ function getFallbackReply(
 
   if (lower.includes("kokteyl") || lower.includes("cocktail")) {
     const cocktails = menu.filter((m) => m.category === "kokteyl");
+    if (cocktails.length === 0) {
+      return "Kokteyl seçeneklerimiz şu an yüklenemedi ama barmenimiz sana harika öneriler sunabilir! 🍸";
+    }
     return `Kokteyl seçeneklerimiz: ${cocktails.map((c) => `${c.name} (₺${c.price})`).join(", ")}. Hangisini denemek istersin?`;
   }
 
   if (lower.includes("bira") || lower.includes("beer")) {
     const beers = menu.filter((m) => m.category === "icecek");
+    if (beers.length === 0) {
+      return "Bira seçeneklerimiz şu an yüklenemedi ama fıçılarımız her zaman taze ve soğuk! 🍺";
+    }
     return `Bira seçeneklerimiz: ${beers.map((b) => `${b.name} (₺${b.price})`).join(", ")}. Fıçı biramız çok taze! 🍺`;
   }
 
   if (lower.includes("yemek") || lower.includes("food") || lower.includes("aç")) {
     const foods = menu.filter((m) => m.category === "yemek");
+    if (foods.length === 0) {
+      return "Yemek menümüz şu an yüklenemedi ama tapas tabaklarımız her zaman hazır! 🍕";
+    }
     return `Yemek seçeneklerimiz: ${foods.map((f) => `${f.name} (₺${f.price})`).join(", ")}. Patatas Bravas en popüler tabanımız! 🔥`;
   }
 
@@ -142,6 +159,12 @@ function getFallbackReply(
 
   if (lower.includes("öneri") || lower.includes("tavsiye") || lower.includes("ne içeyim") || lower.includes("ne yiyeyim")) {
     const featured = menu.filter((m) => m.isFeatured);
+    if (featured.length === 0 && menu.length > 0) {
+      featured.push(menu[Math.floor(Math.random() * menu.length)]);
+    }
+    if (featured.length === 0) {
+      return "Sana imza kokteyllerimizden birini denemeni öneririm! Favorilerimizden biri kesinlikle hoşuna gidecektir. ⭐";
+    }
     const random = featured[Math.floor(Math.random() * featured.length)];
     return `Sana ${random.name}'i öneriyorum! ${random.description}. Fiyatı ₺${random.price}. Favorilerimizden biri! ⭐`;
   }
