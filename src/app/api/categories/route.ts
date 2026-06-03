@@ -19,15 +19,133 @@ const slugify = (text: string) => {
 
 const DEFAULT_CATEGORIES = {
   menu: [
-    { name: "Yemekler & Tapas", slug: "yemek", type: "menu" },
-    { name: "Kahvaltı & Tatlılar", slug: "kahvalti", type: "menu" },
-    { name: "İmza Kokteyller", slug: "kokteyl", type: "menu" },
-    { name: "Şaraplar", slug: "saraplar", type: "menu" },
-    { name: "Fıçı Biralar", slug: "fici-biralar", type: "menu" },
-    { name: "Şişe Biralar", slug: "sise-biralar", type: "menu" },
-    { name: "Viski & Sert Alkollüler", slug: "alkoller", type: "menu" },
-    { name: "Sıcak & Soğuk İçecekler", slug: "icecekler", type: "menu" },
-  ],
+    {
+        "name": "Yeni",
+        "slug": "yeni",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dcf"
+    },
+    {
+        "name": "Fıçı Bira",
+        "slug": "fici-bira",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd0"
+    },
+    {
+        "name": "Şişe Bira",
+        "slug": "sise-bira",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd1"
+    },
+    {
+        "name": "Penny Signature",
+        "slug": "penny-signature",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd2"
+    },
+    {
+        "name": "Doyuranlar",
+        "slug": "doyuranlar",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd3"
+    },
+    {
+        "name": "Elle Ye!",
+        "slug": "elle-ye",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd4"
+    },
+    {
+        "name": "Salatalar",
+        "slug": "salatalar",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd5"
+    },
+    {
+        "name": "Tapas",
+        "slug": "tapas",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd6"
+    },
+    {
+        "name": "Sürahi",
+        "slug": "surahi",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd7"
+    },
+    {
+        "name": "Cin & Tonik/Soda",
+        "slug": "cin-tonik-soda",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd8"
+    },
+    {
+        "name": "Viski",
+        "slug": "viski",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dd9"
+    },
+    {
+        "name": "Konyak",
+        "slug": "konyak",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dda"
+    },
+    {
+        "name": "Tost ve Gözleme",
+        "slug": "tost-gozleme",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285ddb"
+    },
+    {
+        "name": "Penny Kahvaltı",
+        "slug": "penny-kahvalti",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285ddc"
+    },
+    {
+        "name": "Kırmızı Şarap",
+        "slug": "kirmizi-sarap",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285ddd"
+    },
+    {
+        "name": "Blush, Rose, Beyaz, Köpüklü Şarap",
+        "slug": "blush-rose-beyaz-kopuklu",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285dde"
+    },
+    {
+        "name": "Sıcak Şarap, Sangria",
+        "slug": "sicak-sarap-sangria",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285ddf"
+    },
+    {
+        "name": "Snaps & Shots",
+        "slug": "snaps-shots",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285de0"
+    },
+    {
+        "name": "Sıcak İçecekler",
+        "slug": "sicak-icecekler",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285de1"
+    },
+    {
+        "name": "Soğuk İçecekler",
+        "slug": "soguk-icecekler",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285de2"
+    },
+    {
+        "name": "Tatlılar",
+        "slug": "tatlilar",
+        "type": "menu",
+        "_id": "6a2045b17dbc1c1ec1285de3"
+    }
+],
   event: [
     { name: "Jazz Geceleri", slug: "jazz", type: "event" },
     { name: "Rock / Alternatif", slug: "rock", type: "event" },
