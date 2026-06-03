@@ -92,7 +92,7 @@ export default function ChatWidget() {
           ...prev,
           {
             role: "model",
-            content: `Saatlik 10 soru sorma hakkınız dolmuştur. Güvenlik ve kota limitleri sebebiyle 1 saatlik bekleme modundasınız. Kalan süre: ${formatTime(penaltySeconds)}`,
+            content: `Saatlik 3 soru sorma hakkınız dolmuştur. Güvenlik ve kota limitleri sebebiyle 1 saatlik bekleme modundasınız. Kalan süre: ${formatTime(penaltySeconds)}`,
           },
         ]);
         return;

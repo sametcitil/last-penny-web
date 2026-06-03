@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import MenuItem from "@/lib/models/MenuItem";
+import Event from "@/lib/models/Event";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Resend } from "resend";
 
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
     rateLimitMap.set(ip, userLimit);
   }
 
-  if (userLimit.isPenalized || userLimit.count >= 10) {
+  if (userLimit.isPenalized || userLimit.count >= 3) {
     userLimit.isPenalized = true;
     const timeLeftMs = userLimit.resetTime - currentTime;
     return NextResponse.json(
@@ -71,21 +72,48 @@ export async function POST(req: NextRequest) {
       userLimit.count += 1;
       return NextResponse.json({
         reply: "Geri bildirim formunuz başarıyla alındı! Detaylar anında info@lastpenny.com adresine resmi bir e-posta olarak iletildi. Mekanımızı geliştirmemize katkı sağladığınız için çok teşekkür ederiz. 🎶🍷",
-        remainingRights: 10 - userLimit.count
+        remainingRights: 3 - userLimit.count
       });
     }
 
-    // Build menu context for AI from database
+    let upcomingEvents: any[] = [];
+
+    // Build menu and event context for AI from database
     try {
       await dbConnect();
       availableMenu = await MenuItem.find({ isAvailable: true });
+      
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      upcomingEvents = await Event.find({ date: { $gte: todayStart } }).sort({ date: 1 }).limit(10);
     } catch (dbErr) {
-      console.error("AI Chat: Failed to load menu from DB:", dbErr);
+      console.error("AI Chat: Failed to load menu/events from DB:", dbErr);
     }
 
     const menuContext = availableMenu
       .map((item) => `- Ürün: ${item.name} | Kategori: ${item.category} | Açıklama: ${item.description} | Fiyat: ₺${item.price}`)
       .join("\n");
+
+    const eventContext = upcomingEvents.length > 0
+      ? upcomingEvents
+          .map((evt) => {
+            const formattedDate = new Date(evt.date).toLocaleDateString("tr-TR", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+            return `- Etkinlik: ${evt.title} | Tarih: ${formattedDate} | Saat: ${evt.time} | Yer: ${evt.location || "LP Kavaklıdere Sahne"} | Fiyat: ${evt.price ? `₺${evt.price}` : "Ücretsiz/Giriş Serbest"} | Açıklama: ${evt.description}`;
+          })
+          .join("\n")
+      : "Şu an planlanmış yakın tarihli bir etkinlik bulunmamaktadır.";
+
+    const currentLocalDate = new Date().toLocaleDateString("tr-TR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
     const categories = [...new Set(availableMenu.map((item) => item.category))].join(", ");
 
@@ -106,6 +134,10 @@ Last Penny, Ankara Kavaklıdere'de bulunan caz, kültür ve topluluk temalı sı
 4. Müşteri senden "başka", "farklı" veya "alternatif" bir şey istediğinde, sohbet geçmişinde daha önce sunduğun ürünü ASLA tekrar önerme! Menüdeki diğer alternatif kombinasyonlara geçiş yap.
 5. "Yapay zeka analizime göre" veya "veritabanı" gibi robotik kalıplar kullanman KESİNLİKLE YASAKTIR. Gerçek bir barmen gibi samimi, esnek, kısa and öz yanıtlar ver (maksimum 3-4 cümle).
 6. Müşteri bar, menü, yemek, içecek, Ankara Kavaklıdere şubesi veya etkinlikler ile tamamen alakasız/tutarsız mesajlar yazdığında (örneğin matematik, programlama, alakasız genel kültür soruları vb.), gerçek bir barmen gibi kibarca bu konulardan anlamadığını söyle ve soruyu Last Penny menüsü veya etkinliklerine getirecek şekilde yönlendir.
+7. SADECE sana iletilen güncel etkinlikler listesinde bulunan etkinlikleri öner. Listede yer almayan, tarihi geçmiş veya uydurma etkinliklerden kesinlikle bahsetme. Yakın zamandaki veya o günkü etkinlikleri önermek için bugünün tarihine dikkat et.
+
+## BUGÜNÜN TARİHİ:
+${currentLocalDate}
 
 ## DAHA ÖNCE ÖNERDİĞİN ÜRÜNLER (BUNLARI TEKRAR ETME):
 ${pastModelReplies}
@@ -113,50 +145,104 @@ ${pastModelReplies}
 ## MENÜ KATEGORİLERİ: ${categories}
 
 ## GÜNCEL LAST PENNY MENÜSÜ:
-${menuContext}`;
+${menuContext}
+
+## GÜNCEL VE YAKLAŞAN ETKİNLİKLER:
+${eventContext}`;
 
     const apiKey = process.env.GEMINI_API_KEY?.replace(/['"]/g, "");
     if (!apiKey) throw new Error("API_KEY_MISSING");
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction: systemPrompt });
+    let replyText = "";
 
-    let formattedHistory = historyList
-      .filter((msg: { role: string; content: string }) => msg.content?.trim() && !msg.content.includes("[FORM_SUBMIT]:"))
-      .map((msg: { role: string; content: string }) => ({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }],
-      }));
+    if (apiKey.startsWith("sk-")) {
+      // OpenAI Engine
+      const openAIHistory = historyList
+        .filter((msg: { role: string; content: string }) => msg.content?.trim() && !msg.content.includes("[FORM_SUBMIT]:"))
+        .map((msg: { role: string; content: string }) => ({
+          role: msg.role === "user" ? "user" : "assistant",
+          content: msg.content,
+        }));
 
-    if (formattedHistory.length > 0 && formattedHistory[0].role === "model") {
-      formattedHistory.shift();
-    }
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...openAIHistory,
+            { role: "user", content: message }
+          ],
+          max_tokens: 350,
+          temperature: 0.75
+        })
+      });
 
-    const cleanHistory = [];
-    for (let i = 0; i < formattedHistory.length; i++) {
-      if (cleanHistory.length === 0 || cleanHistory[cleanHistory.length - 1].role !== formattedHistory[i].role) {
-        cleanHistory.push(formattedHistory[i]);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `OpenAI API returned status ${res.status}`);
       }
+
+      const data = await res.json();
+      replyText = data.choices?.[0]?.message?.content || "";
+    } else {
+      // Gemini Engine
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", systemInstruction: systemPrompt });
+
+      let formattedHistory = historyList
+        .filter((msg: { role: string; content: string }) => msg.content?.trim() && !msg.content.includes("[FORM_SUBMIT]:"))
+        .map((msg: { role: string; content: string }) => ({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        }));
+
+      if (formattedHistory.length > 0 && formattedHistory[0].role === "model") {
+        formattedHistory.shift();
+      }
+
+      const cleanHistory = [];
+      for (let i = 0; i < formattedHistory.length; i++) {
+        if (cleanHistory.length === 0 || cleanHistory[cleanHistory.length - 1].role !== formattedHistory[i].role) {
+          cleanHistory.push(formattedHistory[i]);
+        }
+      }
+
+      const chat = model.startChat({
+        history: cleanHistory,
+        generationConfig: { 
+          maxOutputTokens: 1000, 
+          temperature: 0.75,
+          thinkingConfig: {
+            thinkingBudget: 0
+          }
+        }
+      });
+
+      const result = await chat.sendMessage(message);
+      replyText = result.response.text();
     }
-
-    const chat = model.startChat({
-      history: cleanHistory,
-      generationConfig: { maxOutputTokens: 350, temperature: 0.75 }
-    });
-
-    const result = await chat.sendMessage(message);
-    const replyText = result.response.text();
 
     if (replyText) {
       userLimit.count += 1;
       rateLimitMap.set(ip, userLimit);
-      return NextResponse.json({ reply: replyText, remainingRights: 10 - userLimit.count });
+      return NextResponse.json({ reply: replyText, remainingRights: 3 - userLimit.count });
     }
 
     throw new Error("Boş yanıt döndü.");
 
   } catch (error: any) {
-    console.error("====== KOTA KORUMA SİMÜLATÖRÜ DEVREDE ======");
+    console.error("====== KOTA KORUMA SİMÜLATÖRÜ DEVRE DIŞI ======");
+    console.error("AI Chat Error:", error);
+    return NextResponse.json(
+      { error: "Yapay zeka sisteminde bir hata oluştu: " + (error?.message || String(error)) },
+      { status: 500 }
+    );
+    /*
     const lower = globalMessage.toLowerCase().trim();
     
     if (availableMenu.length === 0) {
@@ -341,5 +427,6 @@ ${menuContext}`;
       reply: `Şu an yoğunluktan dolayı barda biraz bekletiyorum dostum. Ama barmeniniz Penny her zaman burada! Menümüz hakkında başka ne öğrenmek istersin? 🎶`,
       remainingRights: 10 - count
     });
+    */
   }
 }
