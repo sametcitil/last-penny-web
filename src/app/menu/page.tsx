@@ -10,147 +10,51 @@ interface MenuItem {
   name: string;
   description: string;
   price: number;
-  category: "yemek" | "kokteyl" | "icecek" | "tatli" | "kahvalti";
+  category: string;
   image: string;
   isAvailable: boolean;
   isFeatured?: boolean;
   subcategory?: string;
 }
 
-const SECTIONS = [
-  { id: "yemekler", label: "Yemekler & Tapas" },
-  { id: "kahvalti-tatli", label: "Kahvaltı & Tatlılar" },
-  { id: "kokteyller", label: "İmza Kokteyller" },
-  { id: "saraplar", label: "Şaraplar" },
-  { id: "fici-biralar", label: "Fıçı Biralar" },
-  { id: "sise-biralar", label: "Şişe Biralar" },
-  { id: "alkoller", label: "Viski & Sert Alkollüler" },
-  { id: "icecekler", label: "Sıcak & Soğuk İçecekler" },
-];
-
-const TABS = [
-  { id: "all", label: "Tümü" },
-  ...SECTIONS,
-];
-
-// Akıllı sınıflandırma fonksiyonu
-const getSectionId = (item: MenuItem): string => {
-  if (item.category === "yemek") return "yemekler";
-  if (item.category === "kahvalti" || item.category === "tatli") return "kahvalti-tatli";
-  if (item.category === "kokteyl") return "kokteyller";
-  
-  const sub = (item.subcategory || "").toLowerCase();
-  const name = item.name.toLowerCase();
-  
-  if (sub.includes("şarap") || name.includes("şarap")) return "saraplar";
-  
-  // Fıçı Bira
-  if (sub.includes("fıçı") || sub.includes("draft") || name.includes("fıçı") || name.includes("draft")) {
-    return "fici-biralar";
-  }
-  
-  // Şişe Bira
-  if (
-    sub.includes("şişe") || 
-    sub.includes("bottle") || 
-    name.includes("şişe") || 
-    name.includes("corona") || 
-    name.includes("duvel") || 
-    name.includes("erdinger") || 
-    name.includes("hoegaarden") ||
-    name.includes("gara guzu") ||
-    name.includes("miller") ||
-    name.includes("beck's") ||
-    name.includes("stella artois") ||
-    name.includes("belfast") || 
-    name.includes("bomonti")
-  ) {
-    return "sise-biralar";
-  }
-  
-  // Sert Alkollüler
-  if (
-    sub.includes("viski") || 
-    sub.includes("whiskey") || 
-    sub.includes("shot") || 
-    sub.includes("snaps") || 
-    sub.includes("konyak") || 
-    sub.includes("cin & tonik") ||
-    name.includes("whiskey") ||
-    name.includes("viski") ||
-    name.includes("chivas") ||
-    name.includes("jameson") ||
-    name.includes("aberlour") ||
-    name.includes("glenlivet") ||
-    name.includes("deacon") ||
-    name.includes("shot") ||
-    name.includes("altos") ||
-    name.includes("absolut") ||
-    name.includes("jagermeister") ||
-    name.includes("gin & tonic") ||
-    name.includes("martell")
-  ) {
-    return "alkoller";
-  }
-  
-  // Sıcak & Soğuk Alkolsüz İçecekler
-  if (
-    sub.includes("sıcak") || 
-    sub.includes("soğuk") || 
-    sub.includes("kahve") || 
-    sub.includes("çay") || 
-    sub.includes("cola") || 
-    sub.includes("soda") ||
-    name.includes("cola") || 
-    name.includes("fanta") || 
-    name.includes("sprite") || 
-    name.includes("soda") || 
-    name.includes("su") ||
-    name.includes("tea") ||
-    name.includes("espresso") ||
-    name.includes("americano") ||
-    name.includes("latte") ||
-    name.includes("cappuccino")
-  ) {
-    return "icecekler";
-  }
-  
-  if (item.category === "icecek") {
-    return "icecekler";
-  }
-  
-  return "yemekler";
-};
-
 export default function MenuPage() {
   const [activeSection, setActiveSection] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Tüm menüyü tek seferde çekiyoruz (Bant genişliği ve DB yükü optimizasyonu)
-  useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const res = await fetch("/api/menu");
-        const data = await res.json();
-        if (res.ok) {
-          setMenuItems(data.items);
-        } else {
-          setError("Menü yüklenirken bir hata oluştu.");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Sunucuya bağlanılamadı.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchMenuData = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      // Fetch categories and menu items
+      const [catRes, menuRes] = await Promise.all([
+        fetch("/api/categories?type=menu"),
+        fetch("/api/menu")
+      ]);
 
-    fetchMenu();
+      const catData = await catRes.json();
+      const menuData = await menuRes.json();
+
+      if (catRes.ok && menuRes.ok) {
+        setCategories(catData.categories);
+        setMenuItems(menuData.items);
+      } else {
+        setError("Menü yüklenirken bir hata oluştu.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Sunucuya bağlanılamadı.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMenuData();
   }, []);
 
   // Scrollspy: Sayfa kaydırıldıkça üst sekmeyi otomatik güncelleme
@@ -163,11 +67,11 @@ export default function MenuPage() {
 
       const scrollPosition = window.scrollY + 160;
 
-      for (let i = SECTIONS.length - 1; i >= 0; i--) {
-        const sec = SECTIONS[i];
-        const el = document.getElementById(`section-${sec.id}`);
+      for (let i = categories.length - 1; i >= 0; i--) {
+        const sec = categories[i];
+        const el = document.getElementById(`section-${sec.slug}`);
         if (el && el.offsetTop <= scrollPosition) {
-          setActiveSection(sec.id);
+          setActiveSection(sec.slug);
           break;
         }
       }
@@ -175,7 +79,7 @@ export default function MenuPage() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [categories]);
 
   // Tıklanan sekmeye akıcı kaydırma (smooth scroll)
   const handleTabClick = (id: string) => {
@@ -196,6 +100,11 @@ export default function MenuPage() {
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const TABS = [
+    { id: "all", label: "Tümü" },
+    ...categories.map((c) => ({ id: c.slug, label: c.name }))
+  ];
 
   return (
     <main className="pt-24 pb-20 min-h-screen bg-[var(--color-bg)] text-[var(--color-secondary)]">
@@ -285,21 +194,21 @@ export default function MenuPage() {
             </div>
           ) : (
             <div className="space-y-16">
-              {SECTIONS.map((section) => {
-                const sectionItems = filteredItems.filter((item) => getSectionId(item) === section.id);
+              {categories.map((category) => {
+                const sectionItems = filteredItems.filter((item) => item.category === category.slug);
                 if (sectionItems.length === 0) return null;
 
                 return (
                   <section
-                    key={section.id}
-                    id={`section-${section.id}`}
+                    key={category.slug}
+                    id={`section-${category.slug}`}
                     style={{ scrollMarginTop: "150px" }}
                     className="scroll-mt-40"
                   >
                     {/* Section Header */}
                     <div className="border-b border-[var(--color-border)] pb-3 mb-8">
                       <h2 className="text-xl md:text-2xl font-black font-[family-name:var(--font-playfair)] tracking-wide text-[var(--color-primary)]">
-                        {section.label}
+                        {category.name}
                       </h2>
                     </div>
 

@@ -7,7 +7,10 @@ export interface IEvent extends Document {
   date: Date;
   time: string;
   image: string;
-  category: "jazz" | "rock" | "acoustic" | "dj" | "talk" | "other";
+  images?: string[];
+  price?: number;
+  location?: string;
+  category: string;
   isFeatured: boolean;
   createdAt: Date;
 }
@@ -19,9 +22,11 @@ const EventSchema = new Schema<IEvent>(
     date: { type: Date, required: true },
     time: { type: String, required: true },
     image: { type: String, default: "" },
+    images: [{ type: String }],
+    price: { type: Number, default: 0 },
+    location: { type: String, default: "LP Kavaklıdere Sahne" },
     category: {
       type: String,
-      enum: ["jazz", "rock", "acoustic", "dj", "talk", "other"],
       required: true,
     },
     isFeatured: { type: Boolean, default: false },

@@ -10,60 +10,69 @@ interface Product {
   name: string;
   description: string;
   price: number;
-  category: "tshirt" | "hoodie" | "cap" | "accessory";
+  category: string;
   image: string;
   sizes: string[];
   stock: number;
 }
 
-const CATEGORIES = [
-  { id: "all", label: "Tüm Ürünler" },
-  { id: "tshirt", label: "Tişörtler" },
-  { id: "hoodie", label: "Sweatshirtler" },
-  { id: "cap", label: "Şapkalar" },
-  { id: "accessory", label: "Aksesuarlar" },
-];
-
 export default function MerchPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
   // Track selected size for each product using its ID as key
   const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const url = activeCategory === "all" 
-          ? "/api/merch" 
-          : `/api/merch?category=${activeCategory}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (res.ok) {
-          setProducts(data.products);
-          
-          // Set initial default sizes for products
-          const initialSizes: Record<string, string> = {};
-          data.products.forEach((p: Product) => {
-            if (p.sizes && p.sizes.length > 0) {
-              initialSizes[p._id] = p.sizes[0];
-            }
-          });
-          setSelectedSizes(initialSizes);
-        } else {
-          setError("Ürünler yüklenirken bir hata oluştu.");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Sunucuya bağlanılamadı.");
-      } finally {
-        setLoading(false);
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories?type=product");
+      const data = await res.json();
+      if (res.ok) {
+        setCategories(data.categories);
       }
-    };
+    } catch (err) {
+      console.error("Kategoriler yüklenemedi:", err);
+    }
+  };
 
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const url = activeCategory === "all" 
+        ? "/api/merch" 
+        : `/api/merch?category=${activeCategory}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (res.ok) {
+        setProducts(data.products);
+        
+        // Set initial default sizes for products
+        const initialSizes: Record<string, string> = {};
+        data.products.forEach((p: Product) => {
+          if (p.sizes && p.sizes.length > 0) {
+            initialSizes[p._id] = p.sizes[0];
+          }
+        });
+        setSelectedSizes(initialSizes);
+      } else {
+        setError("Ürünler yüklenirken bir hata oluştu.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Sunucuya bağlanılamadı.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
     fetchProducts();
   }, [activeCategory]);
 
@@ -73,6 +82,11 @@ export default function MerchPage() {
       [productId]: size,
     }));
   };
+
+  const CATEGORIES = [
+    { id: "all", label: "Tüm Ürünler" },
+    ...categories.map((c) => ({ id: c.slug, label: c.name })),
+  ];
 
   return (
     <main className="pt-24 pb-20 min-h-screen bg-[var(--color-bg)]">
@@ -113,7 +127,7 @@ export default function MerchPage() {
               className="mt-6 inline-flex items-center gap-3 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 px-4 py-3 rounded-xl text-xs md:text-sm text-[var(--color-primary)] font-semibold"
             >
               <Sparkles size={16} className="text-[var(--color-primary)] animate-pulse shrink-0" />
-              <span>Online alışveriş özelliğimiz çok yakında hizmetinizde olacaktır! Şu anda ürünlerimizi Last Penny şubemizi ziyaret ederek satın alabilirsiniz.</span>
+              <span>Online alışveriş özelliğimiz çok yakında hizmetinizde olacaktır! Şu anda ürünlerimizi Last Penny şubemizi ziyaret ederek satınabilirsiniz.</span>
             </motion.div>
           </div>
         </Container>

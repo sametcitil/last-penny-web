@@ -5,7 +5,7 @@ export interface IMenuItem extends Document {
   name: string;
   description: string;
   price: number;
-  category: "yemek" | "icecek" | "tatli" | "kahvalti" | "kokteyl";
+  category: string;
   image: string;
   isAvailable: boolean;
   isFeatured: boolean;
@@ -19,7 +19,6 @@ const MenuItemSchema = new Schema<IMenuItem>(
     price: { type: Number, required: true, min: 0 },
     category: {
       type: String,
-      enum: ["yemek", "icecek", "tatli", "kahvalti", "kokteyl"],
       required: true,
     },
     image: { type: String, default: "" },

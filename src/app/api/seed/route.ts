@@ -4,8 +4,9 @@ import MenuItem from "@/lib/models/MenuItem";
 import Event from "@/lib/models/Event";
 import Product from "@/lib/models/Product";
 import User from "@/lib/models/User";
+import Category from "@/lib/models/Category";
 import { hashPassword } from "@/lib/auth";
-import { mockMenuItems, mockEvents, mockProducts } from "@/lib/mock-data";
+import { mockMenuItems, mockEvents, mockProducts, mockCategories } from "@/lib/mock-data";
 
 export async function POST() {
   try {
@@ -15,6 +16,20 @@ export async function POST() {
     await MenuItem.deleteMany({});
     await Event.deleteMany({});
     await Product.deleteMany({});
+    await Category.deleteMany({});
+
+    // Kategorileri ekle
+    const categoryDocs = [
+      ...mockCategories.menu,
+      ...mockCategories.event,
+      ...mockCategories.product,
+      ...mockCategories.gallery,
+    ].map((c) => ({
+      name: c.name,
+      slug: c.slug,
+      type: c.type,
+    }));
+    await Category.insertMany(categoryDocs);
 
     // Menü öğelerini ekle
     const menuDocs = mockMenuItems.map((item) => ({
@@ -35,6 +50,8 @@ export async function POST() {
       date: new Date(event.date),
       time: event.time,
       image: event.image,
+      images: event.images || [event.image],
+      price: event.price || 0,
       category: event.category,
       isFeatured: event.isFeatured,
     }));

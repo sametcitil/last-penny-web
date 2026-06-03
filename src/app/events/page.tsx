@@ -11,20 +11,15 @@ interface EventItem {
   description: string;
   date: string;
   time: string;
-  category: "jazz" | "rock" | "acoustic" | "dj" | "talk" | "other";
+  category: string;
   isFeatured?: boolean;
+  image?: string;
+  images?: string[];
+  price?: number;
+  location?: string;
 }
 
-const CATEGORIES = [
-  { id: "all", label: "Tüm Etkinlikler" },
-  { id: "jazz", label: "Jazz Geceleri" },
-  { id: "rock", label: "Rock / Alternatif" },
-  { id: "acoustic", label: "Akustik Dinletiler" },
-  { id: "dj", label: "DJ Setleri" },
-  { id: "talk", label: "Söyleşi / Kültür" },
-];
-
-const categoryConfig = {
+const categoryConfig: Record<string, { gradient: string; glow: string; icon: any; label: string }> = {
   jazz: {
     gradient: "from-red-50 to-rose-100/50",
     glow: "border-[var(--color-primary)]/20",
@@ -66,34 +61,56 @@ const categoryConfig = {
 export default function EventsPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories?type=event");
+      const data = await res.json();
+      if (res.ok) {
+        setCategories(data.categories);
+      }
+    } catch (err) {
+      console.error("Kategoriler yüklenemedi:", err);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const url = activeCategory === "all" 
+        ? "/api/events" 
+        : `/api/events?category=${activeCategory}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (res.ok) {
+        setEvents(data.events);
+      } else {
+        setError("Etkinlikler yüklenirken bir hata oluştu.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Sunucuya bağlanılamadı.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        const url = activeCategory === "all" 
-          ? "/api/events" 
-          : `/api/events?category=${activeCategory}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (res.ok) {
-          setEvents(data.events);
-        } else {
-          setError("Etkinlikler yüklenirken bir hata oluştu.");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Sunucuya bağlanılamadı.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchCategories();
+  }, []);
 
+  useEffect(() => {
     fetchEvents();
   }, [activeCategory]);
+
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [selectedEvent]);
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -103,6 +120,19 @@ export default function EventsPage() {
       weekday: "long",
     });
   };
+
+  const TABS = [
+    { id: "all", label: "Tüm Etkinlikler" },
+    ...categories.map((c) => ({ id: c.slug, label: c.name })),
+  ];
+
+  const modalImages = selectedEvent
+    ? selectedEvent.images && selectedEvent.images.length > 0
+      ? selectedEvent.images
+      : selectedEvent.image
+      ? [selectedEvent.image]
+      : []
+    : [];
 
   return (
     <main className="pt-24 pb-20 min-h-screen bg-[var(--color-bg)] text-[var(--color-secondary)]">
@@ -156,17 +186,17 @@ export default function EventsPage() {
         <Container>
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
             <Sliders size={14} className="text-[var(--color-secondary)]/40 mr-2 shrink-0 hidden md:block" />
-            {CATEGORIES.map((cat) => (
+            {TABS.map((tab) => (
               <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+                key={tab.id}
+                onClick={() => setActiveCategory(tab.id)}
                 className={`relative px-4 py-2.5 text-xs font-bold rounded-full border transition-all duration-300 whitespace-nowrap cursor-pointer snap-start min-h-[38px] flex items-center justify-center ${
-                  activeCategory === cat.id
+                  activeCategory === tab.id
                     ? "border-[var(--color-primary)] text-white bg-[var(--color-primary)] shadow-sm"
                     : "border-[var(--color-border)] text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] hover:border-[var(--color-secondary)]/30 bg-[var(--color-surface)]"
                 }`}
               >
-                {cat.label}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -272,12 +302,12 @@ export default function EventsPage() {
 
                         {/* Location / Reservation */}
                         <div className="pt-4 border-t border-[var(--color-border)] flex items-center justify-between text-xs text-[var(--color-secondary)]/50">
-                          <span className="flex items-center gap-1 font-semibold">
-                            <MapPin size={12} className="text-[var(--color-primary)]" />
-                            LP Sahne
+                          <span className="flex items-center gap-1 font-semibold truncate max-w-[65%]">
+                            <MapPin size={12} className="text-[var(--color-primary)] shrink-0" />
+                            {e.location || "LP Sahne"}
                           </span>
-                          <span className="text-[var(--color-primary)] font-bold text-[10px] uppercase tracking-wider">
-                            Giriş Serbest
+                          <span className="text-[var(--color-primary)] font-extrabold text-xs font-mono">
+                            {e.price && e.price > 0 ? `₺${e.price}` : "Giriş Serbest"}
                           </span>
                         </div>
                       </div>
@@ -305,71 +335,112 @@ export default function EventsPage() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-lg rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-2xl flex flex-col relative"
+              className="bg-white w-full max-w-4xl rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-2xl flex flex-col md:flex-row relative max-h-[90vh] md:max-h-[80vh]"
             >
-              {/* Top category decoration */}
-              <div className={`h-24 bg-gradient-to-br ${(categoryConfig[selectedEvent.category] || categoryConfig.other).gradient} flex items-center p-6 border-b border-[var(--color-border)] relative`}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white border border-[var(--color-border)] flex items-center justify-center text-[var(--color-primary)] shadow-xs">
-                    {(() => {
-                      const Icon = (categoryConfig[selectedEvent.category] || categoryConfig.other).icon;
-                      return <Icon size={20} />;
-                    })()}
+              {/* Left Column: Carousel */}
+              <div className="md:w-1/2 relative bg-stone-900 flex items-center justify-center min-h-[250px] md:min-h-full">
+                {modalImages.length > 0 ? (
+                  <>
+                    <img
+                      src={modalImages[currentImageIndex]}
+                      alt={selectedEvent.title}
+                      className="w-full h-full object-cover aspect-video md:aspect-auto md:absolute md:inset-0"
+                    />
+                    {modalImages.length > 1 && (
+                      <>
+                        {/* Back button */}
+                        <button
+                          onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? modalImages.length - 1 : prev - 1))}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/85 text-white p-2 rounded-full transition-all cursor-pointer z-10"
+                        >
+                          &lt;
+                        </button>
+                        {/* Next button */}
+                        <button
+                          onClick={() => setCurrentImageIndex((prev) => (prev === modalImages.length - 1 ? 0 : prev + 1))}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/85 text-white p-2 rounded-full transition-all cursor-pointer z-10"
+                        >
+                          &gt;
+                        </button>
+                        {/* Dots */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                          {modalImages.map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setCurrentImageIndex(idx)}
+                              className={`w-2 h-2 rounded-full transition-all ${
+                                currentImageIndex === idx ? "bg-white scale-125" : "bg-white/40"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-stone-500 flex flex-col items-center justify-center p-8 w-full">
+                    <Music size={48} className="text-stone-600 mb-2" />
+                    <span className="text-xs">Görsel Bulunmuyor</span>
                   </div>
-                  <div>
-                    <span className="text-[10px] tracking-[0.2em] font-mono text-[var(--color-secondary)]/50 font-bold uppercase block">
-                      {(categoryConfig[selectedEvent.category] || categoryConfig.other).label}
-                    </span>
-                    <span className="text-xs text-[var(--color-primary)] font-bold">Last Penny Sahnesi</span>
-                  </div>
-                </div>
-
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-800 p-1.5 rounded-full hover:bg-zinc-100/80 transition-all duration-300"
-                >
-                  <X size={18} />
-                </button>
+                )}
               </div>
 
-              {/* Content */}
-              <div className="p-8 space-y-6">
-                <div className="space-y-3">
-                  {/* Date & Time info block */}
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-secondary)]/50 font-mono">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar size={13} className="text-[var(--color-primary)]" />
-                      <span className="font-semibold">{formatDate(selectedEvent.date)}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={13} className="text-[var(--color-primary)]" />
-                      <span className="font-semibold">{selectedEvent.time}</span>
-                    </div>
+              {/* Right Column: Info */}
+              <div className="md:w-1/2 p-6 md:p-8 flex flex-col justify-between space-y-6 overflow-y-auto max-h-[50vh] md:max-h-[80vh]">
+                <div className="space-y-4">
+                  {/* Category tag & Close button */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] tracking-[0.2em] font-mono text-[var(--color-primary)] font-bold uppercase">
+                      {(categoryConfig[selectedEvent.category] || categoryConfig.other).label}
+                    </span>
+                    <button
+                      onClick={() => setSelectedEvent(null)}
+                      className="text-zinc-400 hover:text-zinc-800 p-1.5 rounded-full hover:bg-zinc-100 transition-all duration-300"
+                    >
+                      <X size={18} />
+                    </button>
                   </div>
 
+                  {/* Title */}
                   <h2 className="font-[family-name:var(--font-playfair)] font-black text-2xl text-[var(--color-secondary)] leading-snug">
                     {selectedEvent.title}
                   </h2>
+
+                  {/* Date & Time info block */}
+                  <div className="flex flex-col gap-2 text-xs text-[var(--color-secondary)]/70 font-mono bg-stone-50 p-3.5 rounded-xl border border-stone-100">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-[var(--color-primary)] animate-pulse" />
+                      <span className="font-semibold">{formatDate(selectedEvent.date)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-[var(--color-primary)]" />
+                      <span className="font-semibold">Saat: {selectedEvent.time}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin size={14} className="text-[var(--color-primary)]" />
+                      <span className="font-semibold">Konum: {selectedEvent.location || "LP Kavaklıdere Sahne"}</span>
+                    </div>
+                  </div>
+
+                  {/* Price Details */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[var(--color-muted)] font-semibold">Giriş Ücreti / Bilet:</span>
+                    <span className="text-sm font-extrabold text-[var(--color-primary)] font-mono">
+                      {selectedEvent.price && selectedEvent.price > 0 ? `₺${selectedEvent.price}` : "Giriş Serbest"}
+                    </span>
+                  </div>
+
+                  {/* Extended details / description */}
+                  <div className="text-sm text-zinc-600 leading-relaxed pr-1">
+                    <p>{selectedEvent.description}</p>
+                  </div>
                 </div>
 
-                {/* Extended details / description */}
-                <div className="text-sm text-zinc-600 leading-relaxed space-y-4">
-                  <p>{selectedEvent.description}</p>
-                  <p className="text-xs text-stone-500 bg-stone-50 p-4 rounded-xl border border-stone-100">
-                    💡 <strong>Masa Rezervasyonu:</strong> Etkinliklerimiz ücretsiz olup, giriş serbesttir. Sahneye yakın masalar için önceden rezervasyon yaptırmanız önerilir. Rezervasyon yaptırmak için web sitemiz üzerindeki rezervasyon panelini kullanabilir veya doğrudan bizimle iletişime geçebilirsiniz.
-                  </p>
-                </div>
-
-                {/* Footer details */}
-                <div className="pt-6 border-t border-[var(--color-border)] flex items-center justify-between text-xs text-[var(--color-secondary)]/50">
-                  <span className="flex items-center gap-1 font-semibold">
-                    <MapPin size={12} className="text-[var(--color-primary)]" />
-                    LP Kavaklıdere Sahne
-                  </span>
-                  <span className="text-[var(--color-primary)] font-bold text-[10px] uppercase tracking-wider">
-                    Giriş Serbest
-                  </span>
+                {/* Reservation Warning */}
+                <div className="space-y-4 pt-4 border-t border-[var(--color-border)]">
+                  <div className="text-[11px] text-stone-500 bg-amber-50/50 p-3.5 rounded-xl border border-amber-100/50 leading-relaxed">
+                    💡 <strong>Rezervasyon Bilgisi:</strong> Etkinlik günü kapıda yoğunluk yaşamamak için web sitemiz üzerinden ya da telefonla masa rezervasyonu yaptırmanız rica olunur.
+                  </div>
                 </div>
               </div>
             </motion.div>

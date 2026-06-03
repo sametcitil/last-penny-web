@@ -7,15 +7,9 @@ import { Plus, Edit2, Trash2, RefreshCw, X, Camera, Image, Sparkles } from "luci
 interface GalleryItemType {
   _id: string;
   title: string;
-  category: "lezzet" | "mekan";
+  category: string;
   image: string;
 }
-
-const CATEGORIES = [
-  { id: "all", label: "Tüm Kategoriler" },
-  { id: "lezzet", label: "Last Penny Lezzetleri" },
-  { id: "mekan", label: "Last Penny'den" },
-];
 
 export default function AdminGalleryPage() {
   const [items, setItems] = useState<GalleryItemType[]>([]);
@@ -28,10 +22,63 @@ export default function AdminGalleryPage() {
 
   // Form states
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<GalleryItemType["category"]>("lezzet");
+  const [category, setCategory] = useState("");
   const [image, setImage] = useState("");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Dynamic Categories states
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [dynamicCategories, setDynamicCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories?type=gallery");
+      const data = await res.json();
+      if (res.ok) {
+        setDynamicCategories(data.categories);
+      }
+    } catch (err) {
+      console.error("Kategoriler yüklenemedi:", err);
+    }
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCategoryName, type: "gallery" }),
+      });
+      if (res.ok) {
+        setNewCategoryName("");
+        fetchCategories();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Kategori eklenemedi.");
+      }
+    } catch {
+      alert("Hata oluştu.");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("Bu kategoriyi silmek istediğinizden emin misiniz? Altındaki öğeler silinmeyecektir.")) return;
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchCategories();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Kategori silinemedi.");
+      }
+    } catch {
+      alert("Hata oluştu.");
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -53,12 +100,19 @@ export default function AdminGalleryPage() {
 
   useEffect(() => {
     fetchItems();
+    fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (dynamicCategories.length > 0 && !category) {
+      setCategory(dynamicCategories[0].slug);
+    }
+  }, [dynamicCategories, category]);
 
   const openAddModal = () => {
     setEditingItem(null);
     setTitle("");
-    setCategory("lezzet");
+    setCategory(dynamicCategories[0]?.slug || "");
     setImage("");
     setFormError("");
     setModalOpen(true);
@@ -91,8 +145,8 @@ export default function AdminGalleryPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !image) {
-      setFormError("Lütfen başlık ve görsel alanlarını doldurunuz.");
+    if (!title || !image || !category) {
+      setFormError("Lütfen başlık, kategori ve görsel alanlarını doldurunuz.");
       return;
     }
 
@@ -145,6 +199,10 @@ export default function AdminGalleryPage() {
     }
   };
 
+  const getCategoryLabel = (slug: string) => {
+    return dynamicCategories.find((c) => c.slug === slug)?.name || slug;
+  };
+
   const filteredItems = items.filter((item) => {
     return categoryFilter === "all" || item.category === categoryFilter;
   });
@@ -160,6 +218,12 @@ export default function AdminGalleryPage() {
           <p className="text-xs text-[var(--color-muted)] mt-1">Mekan atmosferi ve topluluk görsellerini düzenleyin.</p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={() => setCategoryModalOpen(true)}
+            className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer border border-stone-200"
+          >
+            Kategorileri Yönet
+          </button>
           <button
             onClick={fetchItems}
             className="p-2.5 bg-white border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] rounded-xl transition-all cursor-pointer text-xs font-semibold flex items-center gap-1.5"
@@ -180,17 +244,27 @@ export default function AdminGalleryPage() {
       {/* Filter Category */}
       <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {CATEGORIES.map((cat) => (
+          <button
+            onClick={() => setCategoryFilter("all")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all cursor-pointer whitespace-nowrap ${
+              categoryFilter === "all"
+                ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 text-[var(--color-primary)]"
+                : "border-[var(--color-border)] bg-white text-[var(--color-secondary)]/70 hover:text-[var(--color-primary)] hover:border-stone-400"
+            }`}
+          >
+            Tüm Kategoriler
+          </button>
+          {dynamicCategories.map((cat) => (
             <button
-              key={cat.id}
-              onClick={() => setCategoryFilter(cat.id)}
+              key={cat.slug}
+              onClick={() => setCategoryFilter(cat.slug)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all cursor-pointer whitespace-nowrap ${
-                categoryFilter === cat.id
+                categoryFilter === cat.slug
                   ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 text-[var(--color-primary)]"
                   : "border-[var(--color-border)] bg-white text-[var(--color-secondary)]/70 hover:text-[var(--color-primary)] hover:border-stone-400"
               }`}
             >
-              {cat.label}
+              {cat.name}
             </button>
           ))}
         </div>
@@ -227,7 +301,7 @@ export default function AdminGalleryPage() {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-full text-[9px] tracking-wider font-mono text-white uppercase font-bold">
-                  {item.category === "lezzet" ? "Lezzet" : "Mekan"}
+                  {getCategoryLabel(item.category)}
                 </div>
               </div>
 
@@ -238,7 +312,7 @@ export default function AdminGalleryPage() {
                     {item.title}
                   </h4>
                   <p className="text-[10px] text-[var(--color-muted)] font-medium">
-                    Kategori: {item.category === "lezzet" ? "Last Penny Lezzetleri" : "Last Penny'den"}
+                    Kategori: {getCategoryLabel(item.category)}
                   </p>
                 </div>
 
@@ -323,11 +397,14 @@ export default function AdminGalleryPage() {
                   <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Kategori</label>
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as GalleryItemType["category"])}
+                    onChange={(e) => setCategory(e.target.value)}
                     className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white focus:outline-none"
                   >
-                    <option value="lezzet">Last Penny Lezzetleri (Yemek, Kokteyl vb.)</option>
-                    <option value="mekan">Last Penny'den (Mekan Fotoğrafları)</option>
+                    {dynamicCategories.map((cat) => (
+                      <option key={cat.slug} value={cat.slug}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -395,6 +472,85 @@ export default function AdminGalleryPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Category Manager Modal */}
+      <AnimatePresence>
+        {categoryModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setCategoryModalOpen(false)}
+            className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-md rounded-2xl border border-[var(--color-border)] p-6 space-y-6 relative max-h-[85vh] overflow-y-auto"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setCategoryModalOpen(false)}
+                className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 p-1.5 rounded-full hover:bg-stone-100"
+              >
+                <X size={18} />
+              </button>
+
+              <div>
+                <h3 className="font-bold text-lg font-[family-name:var(--font-playfair)] text-[var(--color-secondary)]">
+                  Kategorileri Yönet
+                </h3>
+                <p className="text-xs text-[var(--color-muted)]">Galeri için geçerli olan kategorileri ekleyin veya silin.</p>
+              </div>
+
+              {/* Add Category Form */}
+              <form onSubmit={handleAddCategory} className="space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Yeni Kategori Adı"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="flex-1 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white focus:outline-none"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-white font-bold rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    Ekle
+                  </button>
+                </div>
+              </form>
+
+              {/* Categories List */}
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {dynamicCategories.length === 0 ? (
+                  <p className="text-xs text-[var(--color-muted)] text-center py-4">Kategori bulunamadı.</p>
+                ) : (
+                  dynamicCategories.map((cat) => (
+                    <div
+                      key={cat._id}
+                      className="flex items-center justify-between p-3 bg-[var(--color-surface-hover)] rounded-xl border border-[var(--color-border)]"
+                    >
+                      <span className="text-xs font-semibold text-[var(--color-secondary)]">{cat.name}</span>
+                      <button
+                        onClick={() => handleDeleteCategory(cat._id)}
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+                        title="Kategoriyi Sil"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}

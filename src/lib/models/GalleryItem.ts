@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IGalleryItem extends Document {
   title: string;
-  category: "lezzet" | "mekan";
+  category: string;
   image: string; // Base64 data URL or relative path
   createdAt: Date;
 }
@@ -12,7 +12,6 @@ const GalleryItemSchema = new Schema<IGalleryItem>(
     title: { type: String, required: true, trim: true },
     category: {
       type: String,
-      enum: ["lezzet", "mekan"],
       required: true,
     },
     image: { type: String, required: true },

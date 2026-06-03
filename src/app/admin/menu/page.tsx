@@ -9,20 +9,11 @@ interface MenuItemType {
   name: string;
   description: string;
   price: number;
-  category: "yemek" | "kokteyl" | "icecek" | "kahvalti" | "tatli";
+  category: string;
   image?: string;
   isAvailable: boolean;
   isFeatured: boolean;
 }
-
-const CATEGORIES = [
-  { id: "all", label: "Tüm Kategoriler" },
-  { id: "yemek", label: "Yemekler" },
-  { id: "kokteyl", label: "Kokteyller" },
-  { id: "icecek", label: "İçecekler" },
-  { id: "kahvalti", label: "Kahvaltı" },
-  { id: "tatli", label: "Tatlılar" },
-];
 
 export default function AdminMenuPage() {
   const [items, setItems] = useState<MenuItemType[]>([]);
@@ -38,11 +29,64 @@ export default function AdminMenuPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
-  const [category, setCategory] = useState<MenuItemType["category"]>("yemek");
+  const [category, setCategory] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Dynamic Categories states
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [dynamicCategories, setDynamicCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories?type=menu");
+      const data = await res.json();
+      if (res.ok) {
+        setDynamicCategories(data.categories);
+      }
+    } catch (err) {
+      console.error("Kategoriler yüklenemedi:", err);
+    }
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCategoryName, type: "menu" }),
+      });
+      if (res.ok) {
+        setNewCategoryName("");
+        fetchCategories();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Kategori eklenemedi.");
+      }
+    } catch {
+      alert("Hata oluştu.");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("Bu kategoriyi silmek istediğinizden emin misiniz? Altındaki ürünler silinmeyecektir.")) return;
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchCategories();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Kategori silinemedi.");
+      }
+    } catch {
+      alert("Hata oluştu.");
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -64,14 +108,21 @@ export default function AdminMenuPage() {
 
   useEffect(() => {
     fetchItems();
+    fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (dynamicCategories.length > 0 && !category) {
+      setCategory(dynamicCategories[0].slug);
+    }
+  }, [dynamicCategories, category]);
 
   const openAddModal = () => {
     setEditingItem(null);
     setName("");
     setDescription("");
     setPrice(0);
-    setCategory("yemek");
+    setCategory(dynamicCategories[0]?.slug || "");
     setIsAvailable(true);
     setIsFeatured(false);
     setFormError("");
@@ -92,8 +143,8 @@ export default function AdminMenuPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || price <= 0) {
-      setFormError("Lütfen geçerli ad ve fiyat giriniz.");
+    if (!name || price <= 0 || !category) {
+      setFormError("Lütfen geçerli ad, kategori ve fiyat giriniz.");
       return;
     }
 
@@ -141,6 +192,10 @@ export default function AdminMenuPage() {
     }
   };
 
+  const getCategoryLabel = (slug: string) => {
+    return dynamicCategories.find((c) => c.slug === slug)?.name || slug;
+  };
+
   const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase()) ||
                           item.description.toLowerCase().includes(search.toLowerCase());
@@ -159,6 +214,12 @@ export default function AdminMenuPage() {
           <p className="text-xs text-[var(--color-muted)] mt-1">Yemek, içecek ve tatlı listelerini düzenleyin.</p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={() => setCategoryModalOpen(true)}
+            className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer border border-stone-200"
+          >
+            Kategorileri Yönet
+          </button>
           <button
             onClick={fetchItems}
             className="p-2.5 bg-white border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] rounded-xl transition-all cursor-pointer text-xs font-semibold flex items-center gap-1.5"
@@ -190,17 +251,27 @@ export default function AdminMenuPage() {
         </div>
 
         <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 scrollbar-none">
-          {CATEGORIES.map((cat) => (
+          <button
+            onClick={() => setCategoryFilter("all")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all cursor-pointer whitespace-nowrap ${
+              categoryFilter === "all"
+                ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 text-[var(--color-primary)]"
+                : "border-[var(--color-border)] bg-white text-[var(--color-secondary)]/70 hover:text-[var(--color-primary)] hover:border-stone-400"
+            }`}
+          >
+            Tüm Kategoriler
+          </button>
+          {dynamicCategories.map((cat) => (
             <button
-              key={cat.id}
-              onClick={() => setCategoryFilter(cat.id)}
+              key={cat.slug}
+              onClick={() => setCategoryFilter(cat.slug)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all cursor-pointer whitespace-nowrap ${
-                categoryFilter === cat.id
+                categoryFilter === cat.slug
                   ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 text-[var(--color-primary)]"
                   : "border-[var(--color-border)] bg-white text-[var(--color-secondary)]/70 hover:text-[var(--color-primary)] hover:border-stone-400"
               }`}
             >
-              {cat.label}
+              {cat.name}
             </button>
           ))}
         </div>
@@ -246,7 +317,7 @@ export default function AdminMenuPage() {
                   </td>
                   <td>
                     <span className="text-xs font-semibold uppercase tracking-wider px-2.5 py-1 bg-stone-100 rounded-lg text-stone-600">
-                      {CATEGORIES.find((c) => c.id === item.category)?.label || item.category}
+                      {getCategoryLabel(item.category)}
                     </span>
                   </td>
                   <td className="font-mono text-sm font-black text-[var(--color-primary)]">₺{item.price}</td>
@@ -343,14 +414,14 @@ export default function AdminMenuPage() {
                     <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Kategori</label>
                     <select
                       value={category}
-                      onChange={(e) => setCategory(e.target.value as MenuItemType["category"])}
+                      onChange={(e) => setCategory(e.target.value)}
                       className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white focus:outline-none"
                     >
-                      <option value="yemek">Yemekler</option>
-                      <option value="kokteyl">Kokteyller</option>
-                      <option value="icecek">İçecekler</option>
-                      <option value="kahvalti">Kahvaltı</option>
-                      <option value="tatli">Tatlılar</option>
+                      {dynamicCategories.map((cat) => (
+                        <option key={cat.slug} value={cat.slug}>
+                          {cat.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -420,6 +491,85 @@ export default function AdminMenuPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Category Manager Modal */}
+      <AnimatePresence>
+        {categoryModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setCategoryModalOpen(false)}
+            className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-md rounded-2xl border border-[var(--color-border)] p-6 space-y-6 relative max-h-[85vh] overflow-y-auto"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setCategoryModalOpen(false)}
+                className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 p-1.5 rounded-full hover:bg-stone-100"
+              >
+                <X size={18} />
+              </button>
+
+              <div>
+                <h3 className="font-bold text-lg font-[family-name:var(--font-playfair)] text-[var(--color-secondary)]">
+                  Kategorileri Yönet
+                </h3>
+                <p className="text-xs text-[var(--color-muted)]">Menü için geçerli olan kategorileri ekleyin veya silin.</p>
+              </div>
+
+              {/* Add Category Form */}
+              <form onSubmit={handleAddCategory} className="space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Yeni Kategori Adı"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="flex-1 bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white focus:outline-none"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-white font-bold rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    Ekle
+                  </button>
+                </div>
+              </form>
+
+              {/* Categories List */}
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {dynamicCategories.length === 0 ? (
+                  <p className="text-xs text-[var(--color-muted)] text-center py-4">Kategori bulunamadı.</p>
+                ) : (
+                  dynamicCategories.map((cat) => (
+                    <div
+                      key={cat._id}
+                      className="flex items-center justify-between p-3 bg-[var(--color-surface-hover)] rounded-xl border border-[var(--color-border)]"
+                    >
+                      <span className="text-xs font-semibold text-[var(--color-secondary)]">{cat.name}</span>
+                      <button
+                        onClick={() => handleDeleteCategory(cat._id)}
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
+                        title="Kategoriyi Sil"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}

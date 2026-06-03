@@ -152,6 +152,9 @@ export const mockEvents = [
     date: "2026-06-05T21:00:00",
     time: "21:00",
     image: "/mock/jazz.jpg",
+    images: ["/mock/jazz.jpg", "/stage.jpg", "/interior.jpg"],
+    price: 250,
+    location: "LP Kavaklıdere Sahne",
     category: "jazz" as const,
     isFeatured: true,
   },
@@ -163,6 +166,9 @@ export const mockEvents = [
     date: "2026-06-07T22:00:00",
     time: "22:00",
     image: "/mock/rock.jpg",
+    images: ["/mock/rock.jpg", "/stage.jpg"],
+    price: 300,
+    location: "LP Kavaklıdere Sahne",
     category: "rock" as const,
     isFeatured: true,
   },
@@ -174,6 +180,9 @@ export const mockEvents = [
     date: "2026-06-06T20:30:00",
     time: "20:30",
     image: "/mock/acoustic.jpg",
+    images: ["/mock/acoustic.jpg"],
+    price: 0,
+    location: "LP Kavaklıdere Sahne",
     category: "acoustic" as const,
     isFeatured: true,
   },
@@ -185,6 +194,9 @@ export const mockEvents = [
     date: "2026-06-08T23:00:00",
     time: "23:00",
     image: "/mock/dj.jpg",
+    images: ["/mock/dj.jpg", "/bar.jpg"],
+    price: 100,
+    location: "LP Kavaklıdere Sahne",
     category: "dj" as const,
     isFeatured: false,
   },
@@ -196,6 +208,9 @@ export const mockEvents = [
     date: "2026-06-10T19:00:00",
     time: "19:00",
     image: "/mock/bookclub.jpg",
+    images: ["/mock/bookclub.jpg"],
+    price: 0,
+    location: "LP Kavaklıdere Kütüphane",
     category: "talk" as const,
     isFeatured: false,
   },
@@ -207,10 +222,14 @@ export const mockEvents = [
     date: "2026-06-12T21:00:00",
     time: "21:00",
     image: "/mock/standup.jpg",
+    images: ["/mock/standup.jpg"],
+    price: 200,
+    location: "LP Kavaklıdere Sahne",
     category: "other" as const,
     isFeatured: false,
   },
 ];
+
 
 export const mockProducts = [
   {
@@ -412,3 +431,35 @@ export const mockGalleryItems = [
     image: "/interior.jpg",
   },
 ];
+
+export const mockCategories = {
+  menu: [
+    { _id: "cat_m1", name: "Yemekler & Tapas", slug: "yemek", type: "menu" as const },
+    { _id: "cat_m2", name: "Kahvaltı & Tatlılar", slug: "kahvalti", type: "menu" as const },
+    { _id: "cat_m3", name: "İmza Kokteyller", slug: "kokteyl", type: "menu" as const },
+    { _id: "cat_m4", name: "Şaraplar", slug: "saraplar", type: "menu" as const },
+    { _id: "cat_m5", name: "Fıçı Biralar", slug: "fici-biralar", type: "menu" as const },
+    { _id: "cat_m6", name: "Şişe Biralar", slug: "sise-biralar", type: "menu" as const },
+    { _id: "cat_m7", name: "Viski & Sert Alkollüler", slug: "alkoller", type: "menu" as const },
+    { _id: "cat_m8", name: "Sıcak & Soğuk İçecekler", slug: "icecekler", type: "menu" as const },
+  ],
+  event: [
+    { _id: "cat_e1", name: "Jazz Geceleri", slug: "jazz", type: "event" as const },
+    { _id: "cat_e2", name: "Rock / Alternatif", slug: "rock", type: "event" as const },
+    { _id: "cat_e3", name: "Akustik Dinletiler", slug: "acoustic", type: "event" as const },
+    { _id: "cat_e4", name: "DJ Setleri", slug: "dj", type: "event" as const },
+    { _id: "cat_e5", name: "Söyleşi / Kültür", slug: "talk", type: "event" as const },
+    { _id: "cat_e6", name: "Diğer Etkinlikler", slug: "other", type: "event" as const },
+  ],
+  product: [
+    { _id: "cat_p1", name: "Tişörtler", slug: "tshirt", type: "product" as const },
+    { _id: "cat_p2", name: "Sweatshirtler", slug: "hoodie", type: "product" as const },
+    { _id: "cat_p3", name: "Şapkalar", slug: "cap", type: "product" as const },
+    { _id: "cat_p4", name: "Aksesuarlar", slug: "accessory", type: "product" as const },
+  ],
+  gallery: [
+    { _id: "cat_g1", name: "Last Penny Lezzetleri", slug: "lezzet", type: "gallery" as const },
+    { _id: "cat_g2", name: "Last Penny'den", slug: "mekan", type: "gallery" as const },
+  ],
+};
+

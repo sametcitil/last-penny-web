@@ -9,18 +9,13 @@ interface GalleryItem {
   id?: string;
   _id?: string;
   title: string;
-  category: "lezzet" | "mekan";
+  category: string;
   image: string;
 }
 
-const SECTIONS = [
+const FALLBACK_SECTIONS = [
   { id: "lezzet", label: "Last Penny Lezzetleri" },
   { id: "mekan", label: "Last Penny'den" },
-];
-
-const TABS = [
-  { id: "all", label: "Tümü" },
-  ...SECTIONS,
 ];
 
 const GALLERY_ITEMS: GalleryItem[] = [
@@ -65,29 +60,53 @@ const GALLERY_ITEMS: GalleryItem[] = [
 export default function GalleryPage() {
   const [activeSection, setActiveSection] = useState("all");
   const [items, setItems] = useState<any[]>([]);
+  const [categories, setCategories] = useState<{ _id: string; name: string; slug: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-  useEffect(() => {
-    const fetchGallery = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/gallery");
-        const data = await res.json();
-        if (res.ok && data.items && data.items.length > 0) {
-          setItems(data.items);
-        } else {
-          setItems(GALLERY_ITEMS);
-        }
-      } catch (err) {
-        console.error("Failed to load gallery items, using fallback:", err);
-        setItems(GALLERY_ITEMS);
-      } finally {
-        setLoading(false);
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories?type=gallery");
+      const data = await res.json();
+      if (res.ok) {
+        setCategories(data.categories);
       }
-    };
+    } catch (err) {
+      console.error("Kategoriler yüklenemedi:", err);
+    }
+  };
+
+  const fetchGallery = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/gallery");
+      const data = await res.json();
+      if (res.ok && data.items && data.items.length > 0) {
+        setItems(data.items);
+      } else {
+        setItems(GALLERY_ITEMS);
+      }
+    } catch (err) {
+      console.error("Failed to load gallery items, using fallback:", err);
+      setItems(GALLERY_ITEMS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
     fetchGallery();
   }, []);
+
+  const SECTIONS = categories.length > 0
+    ? categories.map((c) => ({ id: c.slug, label: c.name }))
+    : FALLBACK_SECTIONS;
+
+  const TABS = [
+    { id: "all", label: "Tümü" },
+    ...SECTIONS,
+  ];
 
   // Scrollspy: Sayfa kaydırıldıkça sekmeyi güncelleme
   useEffect(() => {
@@ -111,7 +130,7 @@ export default function GalleryPage() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [SECTIONS]);
 
   // Smooth scroll
   const handleTabClick = (id: string) => {

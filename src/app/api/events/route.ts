@@ -60,6 +60,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    if (!body.image && body.images && body.images.length > 0) {
+      body.image = body.images[0];
+    }
+
     try {
       await dbConnect();
       const event = await Event.create(body);
@@ -75,6 +79,9 @@ export async function POST(req: NextRequest) {
         category: body.category || "jazz",
         isFeatured: body.isFeatured || false,
         image: body.image || "",
+        images: body.images || [body.image || ""],
+        price: body.price || 0,
+        location: body.location || "LP Kavaklıdere Sahne",
       };
       mockEvents.unshift(newEvent);
       return NextResponse.json({ event: newEvent, isMock: true }, { status: 201 });
