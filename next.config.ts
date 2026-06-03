@@ -1,8 +1,7 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Turbopack'in mongoose haritalama hatasını tamamen çözer
+  serverExternalPackages: ["mongoose"],
 };
 
 export default nextConfig;
