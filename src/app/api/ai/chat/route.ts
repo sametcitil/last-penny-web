@@ -169,8 +169,9 @@ ${menuContext}`;
     
     const count = userLimit ? userLimit.count : 0;
 
-    const drinks = availableMenu.filter(item => item.category === "kokteyl" || item.category === "icecek");
-    const foods = availableMenu.filter(item => item.category === "yemek");
+    const foodCategories = ["doyuranlar", "elle-ye", "salatalar", "tapas", "tost-gozleme", "penny-kahvalti", "tatlilar"];
+    const drinks = availableMenu.filter(item => !foodCategories.includes(item.category));
+    const foods = availableMenu.filter(item => foodCategories.includes(item.category));
 
     if (userLimit) userLimit.count += 1;
 
@@ -184,52 +185,137 @@ ${menuContext}`;
 
     // Listeleme Talebi
     if (lower.includes("tüm") || lower.includes("hepsi") || lower.includes("liste") || lower.includes("neler")) {
-      const listText = drinks.map(d => `• **${d.name}** (₺${d.price}) - *${d.description}*`).join("\n");
-      return NextResponse.json({ reply: `Last Penny bar tezgahındaki güncel içecek listemizi senin için hazırladım dostum! 🍹\n\n${listText}\n\nHangisiyle başlamak istersin? 😊`, remainingRights: 10 - count });
+      const listText = drinks.slice(0, 8).map(d => `• **${d.name}** (₺${d.price}) - *${d.description}*`).join("\n");
+      return NextResponse.json({ reply: `Last Penny bar tezgahındaki güncel içecek listemizden bazı favorileri senin için seçtim dostum! 🍹\n\n${listText}\n\nHangisiyle başlamak istersin? 😊`, remainingRights: 10 - count });
     }
 
-    // Yemek İstekleri Katmanı
-    if (lower.includes("yemek") || lower.includes("burger") || lower.includes("açım") || lower.includes("yiyecek")) {
+    // Ekşi içecek istekleri
+    if (lower.includes("ekşi") || lower.includes("eksi") || lower.includes("sour")) {
+      const sourDrinks = drinks.filter(d =>
+        (d.name || "").toLowerCase().includes("sour") ||
+        (d.name || "").toLowerCase().includes("ekşi") ||
+        (d.name || "").toLowerCase().includes("eksi") ||
+        (d.description || "").toLowerCase().includes("lime") ||
+        (d.description || "").toLowerCase().includes("limon") ||
+        (d.description || "").toLowerCase().includes("ekşi") ||
+        (d.description || "").toLowerCase().includes("eksi")
+      );
+      const selected = sourDrinks[Math.floor(Math.random() * sourDrinks.length)] || drinks.find(d => d.name === "Southside Sour") || drinks[0];
+      if (selected) {
+        return NextResponse.json({
+          reply: `Tezgahımızdan harika bir ekşi seçimi! Sana **${selected.name}** (₺${selected.price}) önereceğim. İçeriğindeki **${selected.description || "ferahlatıcı notalar"}** tam aradığın ekşi ve canlandırıcı aromayı sunacaktır. Masana hazırlayalım mı? 🍋`,
+          remainingRights: 10 - count
+        });
+      }
+    }
+
+    // Tatlı içecek istekleri
+    if (lower.includes("tatlı") || lower.includes("tatli") || lower.includes("sweet")) {
+      const sweetDrinks = drinks.filter(d =>
+        (d.name || "").toLowerCase().includes("tatlı") ||
+        (d.name || "").toLowerCase().includes("tatli") ||
+        (d.description || "").toLowerCase().includes("tatlı") ||
+        (d.description || "").toLowerCase().includes("tatli") ||
+        (d.description || "").toLowerCase().includes("çilek") ||
+        (d.description || "").toLowerCase().includes("bal") ||
+        (d.description || "").toLowerCase().includes("şeker") ||
+        (d.description || "").toLowerCase().includes("mango") ||
+        (d.description || "").toLowerCase().includes("karpuz") ||
+        (d.description || "").toLowerCase().includes("böğürtlen")
+      );
+      const selected = sweetDrinks[Math.floor(Math.random() * sweetDrinks.length)] || drinks.find(d => d.name === "Strawberry Collins") || drinks[0];
+      if (selected) {
+        return NextResponse.json({
+          reply: `Bardan tam ağzına layık, tatlı bir lezzet! Sana imza tarifimiz **${selected.name}** (₺${selected.price}) kokteylini öneririm. İçeriğinde yer alan **${selected.description || "nefis meyveli aromalar"}** ile keyifli bir içim sunar. Masana gönderelim mi? 🍹🍓`,
+          remainingRights: 10 - count
+        });
+      }
+    }
+
+    // Viski istekleri
+    if (lower.includes("viski") || lower.includes("whiskey") || lower.includes("whisky")) {
+      const whiskeyDrinks = drinks.filter(d => d.category === "viski");
+      const selected = whiskeyDrinks[Math.floor(Math.random() * whiskeyDrinks.length)] || drinks[0];
+      if (selected) {
+        return NextResponse.json({
+          reply: `Last Penny viski kavından mükemmel bir tercih! Sana **${selected.name}** (₺${selected.price}) öneriyorum. Kadehte **${selected.description || "zengin aromasıyla"}** cidden çok özeldir. Hazırlayayım mı? 🥃`,
+          remainingRights: 10 - count
+        });
+      }
+    }
+
+    // Bira istekleri
+    if (lower.includes("bira") || lower.includes("beer")) {
+      const beerDrinks = drinks.filter(d => d.category === "fici-bira" || d.category === "sise-bira");
+      const selected = beerDrinks[Math.floor(Math.random() * beerDrinks.length)] || drinks[0];
+      if (selected) {
+        return NextResponse.json({
+          reply: `Buz gibi bir biraya kim hayır diyebilir ki! Sana taze fıçı ve şişe listemizden **${selected.name}** (₺${selected.price}) öneririm. **${selected.description || "Serinletici ve dolgun içimli"}** bu biramız bardakta harika gider. Masana gelsin mi? 🍺`,
+          remainingRights: 10 - count
+        });
+      }
+    }
+
+    // Şarap istekleri
+    if (lower.includes("şarap") || lower.includes("sarap") || lower.includes("wine")) {
+      const wineDrinks = drinks.filter(d => d.category === "kirmizi-sarap" || d.category === "blush-rose-beyaz-kopuklu" || d.category === "sicak-sarap-sangria");
+      const selected = wineDrinks[Math.floor(Math.random() * wineDrinks.length)] || drinks[0];
+      if (selected) {
+        return NextResponse.json({
+          reply: `Şarap kavımızdan nefis bir kadeh! Sana **${selected.name}** (₺${selected.price}) öneriyorum. İçeriğindeki **${selected.description || "zarif meyve notaları"}** ile gecene eşlik edecektir. Açalım mı? 🍷`,
+          remainingRights: 10 - count
+        });
+      }
+    }
+
+    // Genel kokteyl/içecek istekleri
+    if (lower.includes("kokteyl") || lower.includes("içecek") || lower.includes("alkol") || lower.includes("ne içsem") || lower.includes("ne icsem")) {
+      const signatureDrinks = drinks.filter(d => d.category === "penny-signature");
+      const selected = signatureDrinks[Math.floor(Math.random() * signatureDrinks.length)] || drinks[0];
+      if (selected) {
+        return NextResponse.json({
+          reply: `Last Penny bar tezgahından sana özel bir tavsiye! İmza kokteyllerimizden **${selected.name}** (₺${selected.price}) hazırlayabilirim. İçeriğindeki **${selected.description || "özel barmen dokunuşu"}** ile pişman olmazsın dostum. Sallayalım mı? 🍹`,
+          remainingRights: 10 - count
+        });
+      }
+    }
+
+    // Yemek istekleri
+    if (lower.includes("yemek") || lower.includes("burger") || lower.includes("açım") || lower.includes("yiyecek") || lower.includes("ne yesem") || lower.includes("acım")) {
       let matchedFoods = foods;
-      if (lower.includes("acı") || lower.includes("bahar")) {
+      if (lower.includes("acı") || lower.includes("bahar") || lower.includes("acılı")) {
         matchedFoods = foods.filter(f => (f.description || "").toLowerCase().includes("acı") || (f.name || "").toLowerCase().includes("bravas") || (f.description || "").toLowerCase().includes("jalapeño"));
       }
-      if (lower.includes("başka") || lower.includes("baska") || lower.includes("farklı")) {
-        const filteredPool = matchedFoods.filter(f => f.name !== "Tavuk Kanatları");
-        if (filteredPool.length > 0) matchedFoods = filteredPool;
+      if (lower.includes("tost") || lower.includes("gözleme")) {
+        matchedFoods = foods.filter(f => f.category === "tost-gozleme");
+      }
+      if (lower.includes("kahvaltı") || lower.includes("kahvalti")) {
+        matchedFoods = foods.filter(f => f.category === "penny-kahvalti");
+      }
+      if (lower.includes("tatlı") || lower.includes("tatli")) {
+        matchedFoods = foods.filter(f => f.category === "tatlilar");
       }
       const selectedFood = matchedFoods[Math.floor(Math.random() * matchedFoods.length)] || foods[0];
       if (selectedFood) {
-        return NextResponse.json({ reply: `İsteğin üzerine hemen harika bir lezzet seçeneğine geçiyorum dostum! Şefimizin senin için taze taze hazırlayacağı **${selectedFood.name}** (₺${selectedFood.price}) tabağımızı öneriyorum. İçeriğindeki **${selectedFood.description}** detayları ile tam aradığın kriterlerde harika bir gurme deneyimi sunacaktır. Siparişini mutfağa geçeyim mi? 🍔`, remainingRights: 10 - count });
+        return NextResponse.json({
+          reply: `Mutfağımızdan nefis bir tabak! Şefimizin senin için taze hazırlayacağı **${selectedFood.name}** (₺${selectedFood.price}) öneririm. **${selectedFood.description || "Last Penny klasiği lezzetler"}** ile harika bir gurme deneyimi olacaktır. Siparişini mutfağa geçeyim mi? 🍔`,
+          remainingRights: 10 - count
+        });
       }
     }
 
-    // İçecek ve Tat Durumları Katmanı (Simülatör İçerik Tamamlama Alanı)
-    if (lower.includes("kokteyl") || lower.includes("içecek") || lower.includes("alkol") || lower.includes("tatlı") || lower.includes("ekşi")) {
-      let matchedDrinks = drinks;
-      if (lower.includes("tatlı") || lower.includes("tatli")) {
-        const sangria = drinks.find(d => (d.name || "").toLowerCase().includes("sangria") || (d.description || "").toLowerCase().includes("tatlı") || (d.description || "").toLowerCase().includes("meyve"));
-        if (sangria) {
-          return NextResponse.json({ reply: `Bar tezgahımızdan harika ve tam aradığın tatlılıkta bir seçim! Sana özel imza tarifimiz olan **${sangria.name}** (₺${sangria.price}) kokteylimizi öneririm. İçeriğindeki **${sangria.description}** notaları ile damakta inanılmaz keyifli bir dokunuş bırakır. Masana gönderelim mi? 🍹🍓`, remainingRights: 10 - count });
-        }
-      }
-      if (lower.includes("ekşi") || lower.includes("eksi")) {
-        const sour = drinks.find(d => (d.name || "").toLowerCase().includes("sour") || (d.description || "").toLowerCase().includes("ekşi"));
-        if (sour) {
-          return NextResponse.json({ reply: `Ferahlatıcı ve ekşi tonlar barımızın vazgeçilmezidir! Sana listemizden nefis dengesiyle öne çıkan **${sour.name}** (₺${sour.price}) kokteylimizi hazırlayabilirim. İçeriğindeki **${sour.description}** canlandırıcı aromasıyla harika bir barlık tercihtir. Sallayalım mı? 🍋`, remainingRights: 10 - count });
-        }
-      }
-      const selectedDrink = drinks[Math.floor(Math.random() * drinks.length)];
-      if (selectedDrink) {
-        return NextResponse.json({ reply: `Bar tezgahımızdan harika bir tercih! Sana şu an pürüzsüzce hazırlayabileceğimiz **${selectedDrink.name}** (₺${selectedDrink.price}) içeceğimizi öneririm. İçeriğindeki **${selectedDrink.description}** ile barda tam bir favoridir. Masana gönderelim mi? 🍹`, remainingRights: 10 - count });
-      }
-    }
-
+    // Fallback: Random drink suggestion from actual menu
     const randomDrink = drinks[Math.floor(Math.random() * drinks.length)];
     if (randomDrink) {
-      return NextResponse.json({ reply: `Bar tezgahımızdan harika bir tercih! Sana şu an pürüzsüzce hazırlayabileceğimiz **${randomDrink.name}** (₺${randomDrink.price}) içeceğimizi öneririm. İçeriğindeki ${randomDrink.description} ile barda tam bir favoridir. Masana gönderelim mi? 🍹`, remainingRights: 10 - count });
+      return NextResponse.json({
+        reply: `Last Penny tezgahına hoş geldin dostum! Sana barımızdan en sevilen ürünlerimizden **${randomDrink.name}** (₺${randomDrink.price}) hazırlamamı ister misin? **${randomDrink.description || "Last Penny'nin özel lezzeti"}** ile harika bir seçim olacaktır. 🎶`,
+        remainingRights: 10 - count
+      });
     }
 
-    return NextResponse.json({ reply: `Şu an yoğunluktan dolayı barda biraz bekletiyorum dostum. Ama barmeniniz Penny her zaman burada! Menümüz hakkında başka ne öğrenmek istersin? 🎶`, remainingRights: 10 - count });
+    return NextResponse.json({
+      reply: `Şu an yoğunluktan dolayı barda biraz bekletiyorum dostum. Ama barmeniniz Penny her zaman burada! Menümüz hakkında başka ne öğrenmek istersin? 🎶`,
+      remainingRights: 10 - count
+    });
   }
 }
