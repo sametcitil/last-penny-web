@@ -217,6 +217,7 @@ ${eventContext}`;
         generationConfig: { 
           maxOutputTokens: 1000, 
           temperature: 0.75,
+          // @ts-ignore - thinkingConfig is not yet typed in this SDK version
           thinkingConfig: {
             thinkingBudget: 0
           }
