@@ -1,4 +1,4 @@
-
+import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/lastpenny";
 
@@ -23,15 +23,9 @@ if (!global.mongooseCache) {
   global.mongooseCache = cached;
 }
 
-async function dbConnect(): Promise<any> {
+async function dbConnect(): Promise<typeof mongoose> {
   if (cached.conn) return cached.conn;
 
-  // Yeni eklediğimiz yer burası:
-  const mongooseModule = await import("mongoose");
-  const mongoose = mongooseModule.default || mongooseModule;
-
-  // Cool-off state kodların aynen devam ediyor...
-  
   // Cool-off state: If connection failed in the last 30 seconds, fail immediately without trying
   const now = Date.now();
   const lastFailure = cached.lastFailureTime || 0;

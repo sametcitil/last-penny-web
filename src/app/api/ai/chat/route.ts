@@ -226,4 +226,10 @@ ${menuContext}`;
     }
 
     const randomDrink = drinks[Math.floor(Math.random() * drinks.length)];
->>>>>>> origin/feature/ai-integration
+    if (randomDrink) {
+      return NextResponse.json({ reply: `Bar tezgahımızdan harika bir tercih! Sana şu an pürüzsüzce hazırlayabileceğimiz **${randomDrink.name}** (₺${randomDrink.price}) içeceğimizi öneririm. İçeriğindeki ${randomDrink.description} ile barda tam bir favoridir. Masana gönderelim mi? 🍹`, remainingRights: 10 - count });
+    }
+
+    return NextResponse.json({ reply: `Şu an yoğunluktan dolayı barda biraz bekletiyorum dostum. Ama barmeniniz Penny her zaman burada! Menümüz hakkında başka ne öğrenmek istersin? 🎶`, remainingRights: 10 - count });
+  }
+}
