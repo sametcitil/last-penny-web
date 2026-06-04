@@ -57,12 +57,20 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-[var(--color-surface-hover)] p-6 rounded-2xl h-28 border border-[var(--color-border)]" />
-        ))}
-        <div className="lg:col-span-2 bg-[var(--color-surface-hover)] p-6 rounded-2xl h-80 border border-[var(--color-border)]" />
-        <div className="lg:col-span-2 bg-[var(--color-surface-hover)] p-6 rounded-2xl h-80 border border-[var(--color-border)]" />
+      <div className="space-y-10 animate-pulse">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-[var(--color-surface-hover)] p-6 rounded-2xl h-28 border border-[var(--color-border)]" />
+          ))}
+        </div>
+        <div className="space-y-6">
+          <div className="h-4 bg-[var(--color-surface-hover)] w-24 rounded" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-[var(--color-surface-hover)] p-6 rounded-2xl h-48 border border-[var(--color-border)]" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -123,18 +131,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Users */}
-        <div className="bg-white p-6 rounded-2xl flex items-center justify-between border border-[var(--color-border)] shadow-xs">
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-muted)] font-semibold">Kullanıcılar</span>
-            <h3 className="text-2xl font-bold font-mono">{stats.totalUsers}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
-            <Users size={18} />
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {/* Menu Items */}
         <div className="bg-white p-6 rounded-2xl flex items-center justify-between border border-[var(--color-border)] shadow-xs">
           <div className="space-y-1">
@@ -169,60 +166,35 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Links / Navigation Cards (Left 2 cols) */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-[var(--color-primary)]" />
-            <h3 className="text-sm font-bold uppercase font-mono tracking-wider">Hızlı İşlemler</h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {managementSections.map((section, idx) => {
-              const Icon = section.icon;
-              return (
-                <Link
-                  key={idx}
-                  href={section.href}
-                  className="group block bg-white p-6 rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)]/30 hover:shadow-md transition-all duration-300 relative overflow-hidden"
-                >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${section.color} flex items-center justify-center ${section.textColor} mb-4 group-hover:scale-105 transition-transform`}>
-                    <Icon size={20} />
-                  </div>
-                  <h4 className="font-bold text-base mb-1 text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors flex items-center gap-1.5">
-                    {section.title}
-                    <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                  </h4>
-                  <p className="text-xs text-[var(--color-muted)] leading-relaxed">
-                    {section.desc}
-                  </p>
-                </Link>
-              );
-            })}
-          </div>
+      {/* Quick Actions Sections */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Sparkles size={16} className="text-[var(--color-primary)]" />
+          <h3 className="text-sm font-bold uppercase font-mono tracking-wider">Hızlı İşlemler</h3>
         </div>
 
-        {/* Activity feed (Right 1 col) */}
-        <div className="bg-white p-6 rounded-2xl border border-[var(--color-border)] shadow-xs space-y-6">
-          <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-4">
-            <div className="flex items-center gap-2">
-              <Activity size={16} className="text-[var(--color-primary)] animate-pulse" />
-              <h3 className="text-sm font-bold uppercase font-mono tracking-wider">Son Aktiviteler</h3>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {stats.recentActivity.map((act, i) => (
-              <div key={i} className="flex justify-between items-start gap-4 text-xs py-2.5 border-b border-[var(--color-border)] last:border-b-0 last:pb-0">
-                <div className="space-y-1">
-                  <p className="font-semibold leading-relaxed text-[var(--color-secondary)]/90">{act.message}</p>
-                  <span className="text-[9px] uppercase font-mono tracking-wider text-[var(--color-muted)] font-semibold block">{act.type}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {managementSections.map((section, idx) => {
+            const Icon = section.icon;
+            return (
+              <Link
+                key={idx}
+                href={section.href}
+                className="group block bg-white p-6 rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)]/30 hover:shadow-md transition-all duration-300 relative overflow-hidden"
+              >
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${section.color} flex items-center justify-center ${section.textColor} mb-4 group-hover:scale-105 transition-transform`}>
+                  <Icon size={20} />
                 </div>
-                <span className="text-[9px] text-[var(--color-muted)] whitespace-nowrap shrink-0">{act.time}</span>
-              </div>
-            ))}
-          </div>
+                <h4 className="font-bold text-base mb-1 text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors flex items-center gap-1.5">
+                  {section.title}
+                  <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                </h4>
+                <p className="text-xs text-[var(--color-muted)] leading-relaxed">
+                  {section.desc}
+                </p>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>

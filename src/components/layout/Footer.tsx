@@ -76,7 +76,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 text-sm text-[var(--color-secondary)]/60">
                 <Clock size={16} className="shrink-0 text-[var(--color-primary)]" />
-                <span>Her gün · Kapanış 01:00</span>
+                <span>Her gün · 10:00 - 01:00</span>
               </div>
             </div>
           </div>
@@ -88,15 +88,7 @@ export default function Footer() {
             </h4>
             <div className="flex flex-col gap-2 text-sm text-[var(--color-secondary)]/60">
               <div className="flex justify-between">
-                <span>Pazartesi - Perşembe</span>
-                <span className="text-[var(--color-secondary)]/80 font-semibold">12:00 - 01:00</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Cuma - Cumartesi</span>
-                <span className="text-[var(--color-secondary)]/80 font-semibold">12:00 - 02:00</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pazar</span>
+                <span>Her gün</span>
                 <span className="text-[var(--color-secondary)]/80 font-semibold">10:00 - 01:00</span>
               </div>
               <div className="mt-2 pt-2 border-t border-[var(--color-border)] text-[var(--color-primary)] text-xs font-semibold">

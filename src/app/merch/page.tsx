@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Sparkles, AlertCircle, MapPin } from "lucide-react";
+import { ShoppingBag, Sparkles, AlertCircle, MapPin, X, Shirt } from "lucide-react";
 import Container from "@/components/ui/Container";
 
 interface Product {
@@ -25,6 +25,7 @@ export default function MerchPage() {
   
   // Track selected size for each product using its ID as key
   const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const fetchCategories = async () => {
     try {
@@ -203,14 +204,25 @@ export default function MerchPage() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.3 }}
                       key={p._id}
-                      className="bg-white overflow-hidden rounded-xl border border-[var(--color-border)] hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                      className="bg-white overflow-hidden rounded-xl border border-[var(--color-border)] hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+                      onClick={() => setSelectedProduct(p)}
                     >
-                      {/* Product Preview Box - Stylized CSS instead of broken image link */}
+                      {/* Product Preview Box */}
                       <div className="relative h-60 bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center border-b border-[var(--color-border)] group overflow-hidden">
-                        {/* Huge Abstract Text/Logo for style */}
-                        <div className="text-[120px] font-bold text-black/[0.03] select-none font-[family-name:var(--font-playfair)] tracking-wider group-hover:scale-110 transition-transform duration-700">
-                          LP
-                        </div>
+                        {p.image ? (
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
+                        ) : (
+                          <>
+                            {/* Huge Abstract Text/Logo for style */}
+                            <div className="text-[120px] font-bold text-black/[0.03] select-none font-[family-name:var(--font-playfair)] tracking-wider group-hover:scale-110 transition-transform duration-700">
+                              LP
+                            </div>
+                          </>
+                        )}
 
                         {/* Top Accent Icon */}
                         <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-[var(--color-accent)] border border-[var(--color-border)] shadow-sm">
@@ -244,7 +256,10 @@ export default function MerchPage() {
                                 {p.sizes.map((size) => (
                                   <button
                                     key={size}
-                                    onClick={() => handleSizeChange(p._id, size)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSizeChange(p._id, size);
+                                    }}
                                     className={`px-3 py-1 text-xs rounded font-mono border transition-all cursor-pointer ${
                                       selectedSize === size
                                         ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 text-[var(--color-primary)] font-bold"
@@ -304,6 +319,129 @@ export default function MerchPage() {
           </div>
         </Container>
       </section>
+
+      {/* Product Detail Modal (Popup) */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedProduct(null)}
+            className="fixed inset-0 z-50 bg-stone-950/65 backdrop-blur-xs flex items-center justify-center p-4 md:p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-3xl rounded-2xl border border-[var(--color-border)] overflow-hidden relative shadow-2xl flex flex-col md:flex-row max-h-[90vh] md:max-h-[80vh]"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white backdrop-blur-md text-stone-700 hover:text-black p-2 rounded-full border border-stone-200/50 transition-all cursor-pointer shadow-sm"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Left Side: Large Image */}
+              <div className="w-full md:w-1/2 h-64 md:h-auto bg-gradient-to-br from-stone-100 to-stone-200 relative flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--color-border)] shrink-0 overflow-hidden group">
+                {selectedProduct.image ? (
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-3 text-stone-400">
+                    <Shirt size={48} className="stroke-[1.5]" />
+                    <span className="text-xs uppercase font-mono tracking-wider font-semibold">Last Penny Wear</span>
+                  </div>
+                )}
+                <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm flex items-center justify-center text-[var(--color-accent)] border border-stone-200/50 shadow-xs">
+                  <Sparkles size={14} className="animate-pulse text-[var(--color-primary)]" />
+                </div>
+              </div>
+
+              {/* Right Side: Details */}
+              <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between overflow-y-auto max-h-[calc(90vh-16rem)] md:max-h-none space-y-6">
+                <div className="space-y-4">
+                  {/* Category & Badge */}
+                  <div>
+                    <span className="text-[10px] font-bold font-mono text-[var(--color-primary)] uppercase tracking-widest px-2.5 py-1 bg-[var(--color-primary)]/5 rounded-md border border-[var(--color-primary)]/10 text-xs">
+                      {categories.find((c) => c.slug === selectedProduct.category)?.name || selectedProduct.category}
+                    </span>
+                  </div>
+
+                  {/* Title & Price */}
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-bold font-[family-name:var(--font-playfair)] text-[var(--color-secondary)] tracking-wide leading-tight">
+                      {selectedProduct.name}
+                    </h2>
+                    <p className="text-xl font-black text-[var(--color-primary)] font-mono">
+                      ₺{selectedProduct.price}
+                    </p>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px bg-[var(--color-border)] w-full" />
+
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Ürün Açıklaması</h4>
+                    <p className="text-sm text-zinc-600 leading-relaxed font-sans">
+                      {selectedProduct.description || "Bu ürün hakkında detaylı bir açıklama bulunmamaktadır."}
+                    </p>
+                  </div>
+
+                  {/* Sizes (Stock check) */}
+                  {selectedProduct.sizes && selectedProduct.sizes.length > 0 && selectedProduct.sizes[0] !== "Standart" && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold">Mevcut Bedenler</h4>
+                      <div className="flex gap-2.5 flex-wrap">
+                        {selectedProduct.sizes.map((size) => (
+                          <span
+                            key={size}
+                            className="px-3.5 py-2 text-xs font-bold font-mono border border-[var(--color-primary)] bg-[var(--color-primary)]/5 text-[var(--color-primary)] rounded-lg animate-fade-in"
+                          >
+                            {size}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stock count */}
+                  <div className="flex items-center gap-2 text-xs font-semibold text-stone-600">
+                    <span className={`w-2 h-2 rounded-full ${selectedProduct.stock > 0 ? "bg-green-600 animate-pulse" : "bg-red-600"}`} />
+                    <span>
+                      {selectedProduct.stock > 0 ? (
+                        `Mekanda Mevcut (${selectedProduct.stock} adet stokta)`
+                      ) : (
+                        "Tükendi"
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Footer Info Notice */}
+                <div className="pt-6 border-t border-[var(--color-border)] space-y-3">
+                  <div className="flex items-start gap-2.5 bg-stone-50 border border-stone-200/60 p-3.5 rounded-xl">
+                    <MapPin size={16} className="text-[var(--color-primary)] shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <h5 className="text-[11px] font-bold text-[var(--color-secondary)] uppercase tracking-wider">Mekandan Teslim Alın</h5>
+                      <p className="text-[10px] text-zinc-500 leading-relaxed">
+                        Online satışımız çok yakında başlayacaktır. Bu ürünü satın almak için Kavaklıdere şubemizi ziyaret edebilirsiniz.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

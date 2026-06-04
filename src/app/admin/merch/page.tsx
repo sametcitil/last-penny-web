@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, Edit2, Trash2, RefreshCw, X, Shirt } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, RefreshCw, X, Shirt, Image } from "lucide-react";
 
 interface ProductType {
   _id: string;
@@ -34,8 +34,32 @@ export default function AdminMerchPage() {
   const [category, setCategory] = useState("");
   const [sizes, setSizes] = useState<string[]>([]);
   const [stock, setStock] = useState(0);
+  const [image, setImage] = useState("");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setFormError("");
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError("Görsel boyutu 5MB'dan küçük olmalıdır.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        setImage(reader.result);
+      } else {
+        setFormError("Dosya okunamadı.");
+      }
+    };
+    reader.onerror = () => setFormError("Dosya okunamadı.");
+    reader.readAsDataURL(file);
+  };
 
   // Dynamic Categories states
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -127,6 +151,7 @@ export default function AdminMerchPage() {
     setCategory(dynamicCategories[0]?.slug || "");
     setSizes(["Standart"]);
     setStock(0);
+    setImage("");
     setFormError("");
     setModalOpen(true);
   };
@@ -139,6 +164,7 @@ export default function AdminMerchPage() {
     setCategory(product.category);
     setSizes(product.sizes || []);
     setStock(product.stock || 0);
+    setImage(product.image || "");
     setFormError("");
     setModalOpen(true);
   };
@@ -169,7 +195,7 @@ export default function AdminMerchPage() {
         category,
         sizes,
         stock,
-        image: "",
+        image,
       };
 
       const url = editingProduct ? `/api/merch/${editingProduct._id}` : "/api/merch";
@@ -329,9 +355,20 @@ export default function AdminMerchPage() {
               {filteredProducts.map((p) => (
                 <tr key={p._id} className="transition-colors">
                   <td>
-                    <div className="space-y-0.5">
-                      <span className="font-bold text-[var(--color-secondary)] block">{p.name}</span>
-                      <span className="text-xs text-[var(--color-muted)] line-clamp-1">{p.description}</span>
+                    <div className="flex items-center gap-3">
+                      {p.image ? (
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-[var(--color-border)] bg-stone-100 flex-shrink-0">
+                          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg border border-[var(--color-border)] bg-stone-100 flex items-center justify-center flex-shrink-0 text-stone-400">
+                          <Shirt size={16} />
+                        </div>
+                      )}
+                      <div className="space-y-0.5">
+                        <span className="font-bold text-[var(--color-secondary)] block">{p.name}</span>
+                        <span className="text-xs text-[var(--color-muted)] line-clamp-1">{p.description}</span>
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -478,6 +515,41 @@ export default function AdminMerchPage() {
                     rows={3}
                     className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm transition-all focus:bg-white"
                   />
+                </div>
+
+                {/* Image Upload */}
+                <div className="space-y-2">
+                  <label className="text-xs font-mono uppercase tracking-wider text-[var(--color-muted)] font-semibold block">Ürün Görseli</label>
+                  
+                  {image ? (
+                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-[var(--color-border)] bg-stone-100">
+                      <img src={image} alt="Ürün Önizleme" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setImage("")}
+                        className="absolute top-1.5 right-1.5 bg-black/60 hover:bg-black/85 text-white p-1.5 rounded-full transition-all"
+                        title="Görseli Kaldır"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-all border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5 hover:bg-[var(--color-primary)]/10">
+                        <div className="flex flex-col items-center justify-center pt-3 pb-3 px-4 text-center">
+                          <Plus size={18} className="text-[var(--color-primary)] mb-1" />
+                          <p className="text-xs text-stone-600 font-medium">Görsel Seç</p>
+                          <p className="text-[9px] text-stone-400 mt-0.5">PNG, JPG, JPEG (Maks. 5MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
 
                 {/* Sizes selection */}
