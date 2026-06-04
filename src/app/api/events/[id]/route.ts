@@ -16,8 +16,10 @@ export async function PUT(
 
     const { id } = await params;
     const body = await req.json();
-    if (!body.image && body.images && body.images.length > 0) {
+    if (body.images && body.images.length > 0) {
       body.image = body.images[0];
+    } else if (body.images) {
+      body.image = "";
     }
 
     await dbConnect();
@@ -50,8 +52,10 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    if (!body.image && body.images && body.images.length > 0) {
+    if (body.images && body.images.length > 0) {
       body.image = body.images[0];
+    } else if (body.images) {
+      body.image = "";
     }
 
     await dbConnect();

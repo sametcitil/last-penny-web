@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     rateLimitMap.set(ip, userLimit);
   }
 
+  /*
   if (userLimit.isPenalized || userLimit.count >= 3) {
     userLimit.isPenalized = true;
     const timeLeftMs = userLimit.resetTime - currentTime;
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
       { status: 429 }
     );
   }
+  */
 
   let globalMessage = "";
   let availableMenu: any[] = [];

@@ -249,25 +249,42 @@ export default function EventsPage() {
                       className="bg-[var(--color-surface)] flex flex-col justify-between overflow-hidden rounded-2xl border-2 border-[var(--color-secondary)] hover:shadow-md transition-all duration-300 group cursor-pointer"
                     >
                       {/* Banner Visual */}
-                      <div className={`relative h-40 bg-gradient-to-br ${cfg.gradient} flex items-center justify-center p-6 border-b border-[var(--color-border)] overflow-hidden`}>
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4),transparent)] pointer-events-none" />
-                        
-                        {/* Dynamic Background Icon for decoration */}
-                        <IconComponent className="absolute -right-8 -bottom-8 w-32 h-32 text-[var(--color-primary)]/5 rotate-12 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6" />
+                      <div className="relative h-40 border-b border-[var(--color-border)] overflow-hidden bg-stone-900 flex items-center justify-center">
+                        {e.image ? (
+                          <>
+                            <img
+                              src={e.image}
+                              alt={e.title}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/25 transition-colors duration-300" />
+                            {/* Category Badge overlay on image */}
+                            <span className="absolute bottom-3 left-3 text-[9px] tracking-[0.15em] font-mono bg-black/65 backdrop-blur-xs text-white px-2.5 py-1 rounded-md font-bold uppercase z-10">
+                              {cfg.label}
+                            </span>
+                          </>
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-br ${cfg.gradient} flex items-center justify-center p-6 relative`}>
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4),transparent)] pointer-events-none" />
+                            
+                            {/* Dynamic Background Icon for decoration */}
+                            <IconComponent className="absolute -right-8 -bottom-8 w-32 h-32 text-[var(--color-primary)]/5 rotate-12 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6" />
 
-                        {/* Centered Icon & Category Badge */}
-                        <div className="flex flex-col items-center gap-2 z-10">
-                          <div className="w-12 h-12 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-primary)] shadow-xs">
-                            <IconComponent size={22} className="group-hover:animate-bounce" />
+                            {/* Centered Icon & Category Badge */}
+                            <div className="flex flex-col items-center gap-2 z-10">
+                              <div className="w-12 h-12 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-primary)] shadow-xs">
+                                <IconComponent size={22} className="group-hover:animate-bounce" />
+                              </div>
+                              <span className="text-[10px] tracking-[0.2em] font-mono text-[var(--color-secondary)]/50 font-bold uppercase mt-1">
+                                {cfg.label}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[10px] tracking-[0.2em] font-mono text-[var(--color-secondary)]/50 font-bold uppercase mt-1">
-                            {cfg.label}
-                          </span>
-                        </div>
+                        )}
 
                         {/* Featured Badge */}
                         {e.isFeatured && (
-                          <div className="absolute top-4 left-4 flex items-center gap-1.5 text-[9px] font-bold bg-[var(--color-primary)] text-white px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                          <div className="absolute top-4 left-4 flex items-center gap-1.5 text-[9px] font-bold bg-[var(--color-primary)] text-white px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-10">
                             <Sparkles size={8} />
                             Öne Çıkan
                           </div>
